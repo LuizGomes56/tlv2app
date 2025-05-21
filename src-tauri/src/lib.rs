@@ -15,6 +15,7 @@ struct AppState {
     pool: PgPool,
     game_code: Arc<Mutex<String>>,
     game_id: Arc<Mutex<String>>,
+    game_started: Arc<Mutex<bool>>,
 }
 
 #[tauri::command]
@@ -23,12 +24,16 @@ fn send_code(state: State<'_, Arc<AppState>>) -> String {
 }
 
 #[tauri::command]
-async fn start_game(state: State<'_, Arc<AppState>>) -> Result<String, String> {
+async fn get_realtime_game(state: State<'_, Arc<AppState>>) -> Result<String, String> {
     let pool = state.pool.clone();
     let game_id = state.game_id.lock().unwrap().clone();
     let game_code = state.game_code.lock().unwrap().clone();
+    let mut game_started = state.game_started.lock().unwrap().clone();
 
-    commit_game_register(&pool, game_code, game_id).await
+    let commit_register = commit_game_register(&pool, &mut game_started, game_code, game_id).await;
+    let mut game_started_guard = state.game_started.lock().unwrap();
+    *game_started_guard = true;
+    commit_register
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -36,7 +41,7 @@ pub fn run() {
     dotenv().ok();
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![send_code, start_game])
+        .invoke_handler(tauri::generate_handler![send_code, get_realtime_game])
         .setup(|app| {
             let database_url = env::var("DATABASE_URL").expect("DATABASE_URL não definido");
 
@@ -56,6 +61,7 @@ pub fn run() {
                 pool: pool.clone(),
                 game_code: Arc::new(Mutex::new(code.clone())),
                 game_id: Arc::new(Mutex::new(game_id.clone())),
+                game_started: Arc::new(Mutex::new(false)),
             });
 
             tauri::async_runtime::block_on(async {

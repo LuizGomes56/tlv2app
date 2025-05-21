@@ -2,14 +2,14 @@ use std::time::Duration;
 
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
+use serde_json::{json, Value};
 use sqlx::{query, PgPool};
 
 #[derive(Deserialize)]
 pub struct ServerResponse {
     pub success: bool,
-    pub message: String,
-    pub data: String,
+    pub message: Option<String>,
+    pub data: Option<Value>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -50,6 +50,7 @@ pub async fn create_game_register(pool: &PgPool, game_code: String, game_id: Str
 
 pub async fn commit_game_register(
     pool: &PgPool,
+    game_started: &mut bool,
     game_code: String,
     game_id: String,
 ) -> Result<String, String> {
@@ -84,13 +85,16 @@ pub async fn commit_game_register(
         .map(|p| p.champion_name)
         .unwrap_or_default();
 
-    query("UPDATE games SET champion_name = $1, summoner_name = $2 WHERE game_id = $3")
-        .bind(champion_name.clone())
-        .bind(summoner_name.clone())
-        .bind(game_id.clone())
-        .execute(pool)
-        .await
-        .map_err(|e| format!("Erro ao atualizar games: {}", e))?;
+    if !game_started.clone() {
+        query("UPDATE games SET champion_name = $1, summoner_name = $2 WHERE game_id = $3")
+            .bind(champion_name.clone())
+            .bind(summoner_name.clone())
+            .bind(game_id.clone())
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Erro ao atualizar games: {}", e))?;
+        *game_started = true;
+    }
 
     query(
         "INSERT INTO game_data (game_id, game_data, champion_name, game_time, summoner_name)
@@ -121,8 +125,11 @@ pub async fn commit_game_register(
         .map_err(|e| format!("Erro ao parsear resposta do servidor: {}", e))?;
 
     if !api_response.success {
-        Err(format!("Erro ao calcular dados: {}", api_response.message))
+        Err(format!(
+            "Erro ao calcular dados: {}",
+            api_response.message.unwrap_or_default()
+        ))
     } else {
-        Ok(api_response.data)
+        Ok(api_response.data.unwrap_or_default().to_string())
     }
 }

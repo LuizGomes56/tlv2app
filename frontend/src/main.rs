@@ -1,69 +1,21 @@
+mod components;
 mod model;
+mod tauriapp;
 
-use model::realtime::Realtime;
-use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
-use wasm_bindgen_futures::spawn_local;
-use web_sys::{HtmlInputElement, console};
+use std::rc::Rc;
+
+use components::realtime::RealtimeDisplay;
+use gloo::timers::callback::Interval;
+use model::{example::makeup_example, realtime::Realtime};
+use tauriapp::invokers::get_realtime_game;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
-
-#[wasm_bindgen(module = "/public/glue.js")]
-unsafe extern "C" {
-    #[wasm_bindgen(js_name = invoke_send_code, catch)]
-    pub async fn invoke_send_code() -> Result<JsValue, JsValue>;
-
-    #[wasm_bindgen(js_name = invoke_start_game, catch)]
-    pub async fn invoke_start_game() -> Result<JsValue, JsValue>;
-}
-
-fn start_game(game_data: UseStateHandle<Option<Realtime>>) {
-    spawn_local(async move {
-        match invoke_start_game().await {
-            Ok(value) => {
-                console::log_1(&value);
-                let json_string = value.as_string().unwrap_or_default();
-                match serde_json::from_str(&json_string) {
-                    Ok(realtime_data) => {
-                        game_data.set(realtime_data);
-                    }
-                    Err(e) => {
-                        console::log_1(&JsValue::from_str(e.to_string().as_str()));
-                    }
-                }
-            }
-            Err(e) => {
-                let error_msg = JsValue::from_str(
-                    "É necessário estar instalar o aplicativo nativo para usar o Realtime.",
-                );
-                console::log_1(&error_msg);
-                console::log_1(&e);
-            }
-        }
-    });
-}
-
-fn get_code(game_code: UseStateHandle<String>) {
-    spawn_local(async move {
-        let code = invoke_send_code().await;
-        match code {
-            Ok(code_value) => {
-                if code_value.is_undefined() {
-                    console::log_1(&JsValue::from_str("O aplicativo nativo não está em uso"));
-                    game_code.set("??????".to_string());
-                } else {
-                    game_code.set(code_value.as_string().unwrap());
-                }
-            }
-            Err(e) => {
-                console::log_1(&e);
-            }
-        }
-    });
-}
 
 #[function_component(App)]
 fn app() -> Html {
     let game_code = use_state(|| String::new());
-    let game_data = use_state(|| Option::<Realtime>::None);
+    let game_data = use_state(|| Option::<Rc<Realtime>>::None);
+    let interval_handle = use_state(|| None);
 
     let oninput = {
         let game_code = game_code.clone();
@@ -76,25 +28,59 @@ fn app() -> Html {
 
     {
         let game_code = game_code.clone();
+        let game_data = game_data.clone();
         use_effect_with((), move |_| {
-            get_code(game_code);
+            makeup_example(game_data);
+            // get_code(game_code);
             || ()
         });
     }
 
-    let onclick = {
+    let start_game = {
         let game_data = game_data.clone();
-        Callback::from(move |_: MouseEvent| {
-            start_game(game_data.clone());
+        let interval_handle = interval_handle.clone();
+
+        Callback::from(move |_| {
+            if interval_handle.is_some() {
+                return;
+            }
+            let game_data = game_data.clone();
+            let handle = Interval::new(1000, move || {
+                get_realtime_game(game_data.clone());
+            });
+
+            interval_handle.set(Some(handle));
+        })
+    };
+
+    let stop_game = {
+        let interval_handle = interval_handle.clone();
+
+        Callback::from(move |_| {
+            interval_handle.set(None);
         })
     };
 
     html! {
         <div>
-            <h1>{ "Hello Worlds of yew" }</h1>
             <input type="text" {oninput} />
             <h2>{ format!("Code: {}", *game_code) }</h2>
-            <button {onclick}>{ "Start Game" }</button>
+            <button onclick={start_game}>{ "Start Game" }</button>
+            <button onclick={stop_game}>{ "Stop Game" }</button>
+            {
+                if game_data.is_some() {
+                    if let Some(data) = game_data.as_ref() {
+                        html! {
+                            <RealtimeDisplay game_data={data} />
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+                else {
+                    html! {}
+                }
+            }
         </div>
     }
 }
