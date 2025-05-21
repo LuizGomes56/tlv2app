@@ -2,7 +2,15 @@ use std::time::Duration;
 
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use sqlx::{query, PgPool};
+
+#[derive(Deserialize)]
+pub struct ServerResponse {
+    pub success: bool,
+    pub message: String,
+    pub data: String,
+}
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,7 +48,11 @@ pub async fn create_game_register(pool: &PgPool, game_code: String, game_id: Str
         .unwrap();
 }
 
-pub async fn commit_game_register(pool: &PgPool, game_id: String) -> Result<String, String> {
+pub async fn commit_game_register(
+    pool: &PgPool,
+    game_code: String,
+    game_id: String,
+) -> Result<String, String> {
     let client = Client::builder()
         .danger_accept_invalid_certs(true)
         .timeout(Duration::from_secs(5))
@@ -53,13 +65,15 @@ pub async fn commit_game_register(pool: &PgPool, game_id: String) -> Result<Stri
         .await
         .map_err(|e| format!("Erro na requisição: {}", e))?;
 
-    let data: RiotRealtime = resp
-        .json()
+    let body = resp
+        .text()
         .await
-        .map_err(|e| format!("Falha ao parsear JSON: {}", e))?;
+        .map_err(|e| format!("Erro ao ler corpo da resposta: {}", e))?;
 
-    let game_data =
-        serde_json::to_string(&data).map_err(|e| format!("Erro ao serializar game data: {}", e))?;
+    let data: RiotRealtime =
+        serde_json::from_str(&body).map_err(|e| format!("Falha ao parsear JSON: {}", e))?;
+
+    let game_data = body.clone();
 
     let game_time = data.game_data.game_time;
     let summoner_name = data.active_player.riot_id.clone();
@@ -91,5 +105,24 @@ pub async fn commit_game_register(pool: &PgPool, game_id: String) -> Result<Stri
     .await
     .map_err(|e| format!("Erro ao inserir game_data: {}", e))?;
 
-    Ok("Dados enviados com sucesso".into())
+    let calculated_data = client
+        .post("http://localhost:8082/api/realtime")
+        .json(&json!({
+            "code": game_code,
+            "item": "4645"
+        }))
+        .send()
+        .await
+        .map_err(|e| format!("Erro ao enviar dados: {}", e))?;
+
+    let api_response: ServerResponse = calculated_data
+        .json()
+        .await
+        .map_err(|e| format!("Erro ao parsear resposta do servidor: {}", e))?;
+
+    if !api_response.success {
+        Err(format!("Erro ao calcular dados: {}", api_response.message))
+    } else {
+        Ok(api_response.data)
+    }
 }

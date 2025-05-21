@@ -26,8 +26,9 @@ fn send_code(state: State<'_, Arc<AppState>>) -> String {
 async fn start_game(state: State<'_, Arc<AppState>>) -> Result<String, String> {
     let pool = state.pool.clone();
     let game_id = state.game_id.lock().unwrap().clone();
+    let game_code = state.game_code.lock().unwrap().clone();
 
-    commit_game_register(&pool, game_id).await
+    commit_game_register(&pool, game_code, game_id).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

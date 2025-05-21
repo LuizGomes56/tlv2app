@@ -1,8 +1,8 @@
-const invoke = window.__TAURI_INTERNALS__.invoke;
+const invoke = window.__TAURI_INTERNALS__?.invoke;
 
-export async function invokeSendCode() {
-    return await invoke("send_code");
+export async function invoke_send_code() {
+    return await invoke?.("send_code");
 }
-export async function invokeStartGame() {
-    return await invoke("start_game");
+export async function invoke_start_game() {
+    return await invoke?.("start_game");
 }
