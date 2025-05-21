@@ -1,0 +1,6 @@
+*.env
+*.lock
+**/target
+**/dist
+**/gen/schemas
+**/icons
