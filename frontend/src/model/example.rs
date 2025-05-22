@@ -174,7 +174,31 @@ pub fn makeup_example(game_data: UseStateHandle<Option<Rc<Realtime>>>) {
             3102,
             6655
         ],
-        "compared_items": {}
+        "compared_items": {},
+        "scoreboard": [
+            {
+                "assists": 0,
+                "creep_score": 0,
+                "deaths": 0,
+                "kills": 1,
+                "riot_id": "Giga Gnar#BRZL",
+                "champion_id": "Neeko",
+                "champion_name": "Neeko",
+                "team": "ORDER",
+                "position": ""
+            },
+            {
+                "assists": 0,
+                "creep_score": 10,
+                "deaths": 0,
+                "kills": 0,
+                "riot_id": "Chogath#BOT",
+                "champion_id": "Chogath",
+                "champion_name": "Cho'Gath",
+                "team": "CHAOS",
+                "position": "MIDDLE"
+            }
+        ]
     }"#;
 
     let realtime: Realtime =

@@ -154,7 +154,7 @@ fn make_stack_event(
                         })
                     };
                     html! {
-                        <button {onclick} class="text-white relative w-8 h-8 flex items-center justify-center">
+                        <button {onclick} class="cursor-pointer text-white relative w-8 h-8 flex items-center justify-center">
                             {create_image(
                                 keyname,
                                 Some(champion_id.clone()),

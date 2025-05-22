@@ -32,11 +32,38 @@ body {
     color: rgb(255 150 241);
 }
 
-table tbody tr:nth-child(even) {
+.table-like-alt section:nth-child(even) {
+    background-color: rgb(2 28 28);
+}
+
+.table-like-alt-hidden section:nth-child(even) {
+    background-color: rgbrgb(38 18 28);
+}
+
+.table-like-alt-hidden section:nth-child(odd) {
+    background-color: rgb(32 14 23);
+}
+
+.table-like-alt section:nth-child(odd) {
+    background-color: rgb(15 25 25);
+}
+
+button:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+img {
+    user-select: none;
+}
+
+table tbody tr:nth-child(even),
+.table-like section:nth-child(even) {
     background-color: #1a253b;
 }
 
-table tbody tr:nth-child(odd) {
+table tbody tr:nth-child(odd),
+.table-like section:nth-child(odd) {
     background-color: #111827;
 }
 
@@ -54,6 +81,11 @@ table td {
     justify-items: center;
     text-align: center;
     color: white;
+}
+
+table thead tr th:first-child,
+table tbody tr td:first-child {
+    width: 20px;
 }
 
 table img {

@@ -100,10 +100,24 @@ pub struct ItemCompared {
 }
 
 #[derive(PartialEq, Clone, Deserialize)]
+pub struct Scoreboard {
+    pub assists: usize,
+    pub creep_score: usize,
+    pub deaths: usize,
+    pub kills: usize,
+    pub riot_id: String,
+    pub champion_id: String,
+    pub champion_name: String,
+    pub team: String,
+    pub position: String,
+}
+
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: Vec<Enemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
     pub compared_items: HashMap<String, ItemCompared>,
+    pub scoreboard: Vec<Scoreboard>,
 }

@@ -13,7 +13,7 @@ use yew::prelude::*;
 
 #[function_component(App)]
 fn app() -> Html {
-    // let game_code = use_state(|| String::new());
+    let game_code = use_state(|| String::from("000000"));
     let game_data = use_state(|| Option::<Rc<Realtime>>::None);
     // let interval_handle = use_state(|| None);
 
@@ -71,7 +71,7 @@ fn app() -> Html {
                 if game_data.is_some() {
                     if let Some(data) = game_data.as_ref() {
                         html! {
-                            <RealtimeDisplay game_data={data} />
+                            <RealtimeDisplay game_data={data} game_code={(*game_code).clone()} />
                         }
                     } else {
                         html! {}
