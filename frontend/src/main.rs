@@ -5,29 +5,29 @@ mod tauriapp;
 use std::rc::Rc;
 
 use components::realtime::RealtimeDisplay;
-use gloo::timers::callback::Interval;
+// use gloo::timers::callback::Interval;
 use model::{example::makeup_example, realtime::Realtime};
-use tauriapp::invokers::get_realtime_game;
-use web_sys::HtmlInputElement;
+// use tauriapp::invokers::get_realtime_game;
+// use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 #[function_component(App)]
 fn app() -> Html {
-    let game_code = use_state(|| String::new());
+    // let game_code = use_state(|| String::new());
     let game_data = use_state(|| Option::<Rc<Realtime>>::None);
-    let interval_handle = use_state(|| None);
+    // let interval_handle = use_state(|| None);
 
-    let oninput = {
-        let game_code = game_code.clone();
+    // let oninput = {
+    //     let game_code = game_code.clone();
 
-        Callback::from(move |e: InputEvent| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            game_code.set(input.value());
-        })
-    };
+    //     Callback::from(move |e: InputEvent| {
+    //         let input: HtmlInputElement = e.target_unchecked_into();
+    //         game_code.set(input.value());
+    //     })
+    // };
 
     {
-        let game_code = game_code.clone();
+        // let game_code = game_code.clone();
         let game_data = game_data.clone();
         use_effect_with((), move |_| {
             makeup_example(game_data);
@@ -36,37 +36,37 @@ fn app() -> Html {
         });
     }
 
-    let start_game = {
-        let game_data = game_data.clone();
-        let interval_handle = interval_handle.clone();
+    // let start_game = {
+    //     let game_data = game_data.clone();
+    //     let interval_handle = interval_handle.clone();
 
-        Callback::from(move |_| {
-            if interval_handle.is_some() {
-                return;
-            }
-            let game_data = game_data.clone();
-            let handle = Interval::new(1000, move || {
-                get_realtime_game(game_data.clone());
-            });
+    //     Callback::from(move |_| {
+    //         if interval_handle.is_some() {
+    //             return;
+    //         }
+    //         let game_data = game_data.clone();
+    //         let handle = Interval::new(1000, move || {
+    //             get_realtime_game(game_data.clone());
+    //         });
 
-            interval_handle.set(Some(handle));
-        })
-    };
+    //         interval_handle.set(Some(handle));
+    //     })
+    // };
 
-    let stop_game = {
-        let interval_handle = interval_handle.clone();
+    // let stop_game = {
+    //     let interval_handle = interval_handle.clone();
 
-        Callback::from(move |_| {
-            interval_handle.set(None);
-        })
-    };
+    //     Callback::from(move |_| {
+    //         interval_handle.set(None);
+    //     })
+    // };
 
     html! {
         <div>
-            <input type="text" {oninput} />
-            <h2>{ format!("Code: {}", *game_code) }</h2>
-            <button onclick={start_game}>{ "Start Game" }</button>
-            <button onclick={stop_game}>{ "Stop Game" }</button>
+            // <input type="text" {oninput} />
+            // <h2>{ format!("Code: {}", *game_code) }</h2>
+            // <button onclick={start_game}>{ "Start Game" }</button>
+            // <button onclick={stop_game}>{ "Stop Game" }</button>
             {
                 if game_data.is_some() {
                     if let Some(data) = game_data.as_ref() {

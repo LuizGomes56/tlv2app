@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
@@ -22,7 +22,7 @@ pub struct Stats {
     pub current_mana: f64,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct BasicStats {
     pub armor: f64,
     pub health: f64,
@@ -31,7 +31,7 @@ pub struct BasicStats {
     pub mana: f64,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct CurrentPlayer {
     pub damaging_abilities: HashMap<String, String>,
     pub damaging_items: HashMap<String, String>,
@@ -47,13 +47,13 @@ pub struct CurrentPlayer {
     pub current_stats: Stats,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct GameInformation {
     pub game_time: f64,
     pub map_number: usize,
 }
 
-#[derive(PartialEq, Deserialize, Clone)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct InstanceDamage {
     pub minimum_damage: f64,
     pub maximum_damage: f64,
@@ -62,14 +62,14 @@ pub struct InstanceDamage {
     pub damages_onhit: bool,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct BasicDamages {
     pub abilities: HashMap<String, InstanceDamage>,
     pub items: HashMap<String, InstanceDamage>,
     pub runes: HashMap<String, InstanceDamage>,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Damages {
     pub abilities: HashMap<String, InstanceDamage>,
     pub items: HashMap<String, InstanceDamage>,
@@ -77,7 +77,7 @@ pub struct Damages {
     pub compared_items: HashMap<String, BasicDamages>,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Enemy {
     pub champion_id: String,
     pub champion_name: String,
@@ -91,7 +91,7 @@ pub struct Enemy {
     pub current_stats: BasicStats,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct ItemCompared {
     pub name: String,
     pub has_active: bool,
@@ -99,7 +99,7 @@ pub struct ItemCompared {
     pub prettified_stats: HashMap<String, String>,
 }
 
-#[derive(PartialEq, Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Realtime {
     pub current_player: CurrentPlayer,
     pub enemies: Vec<Enemy>,
