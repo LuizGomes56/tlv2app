@@ -1,4 +1,4 @@
-use crate::model::realtime::{CurrentPlayer, Enemy, InstanceDamage};
+use crate::model::realtime::{CurrentPlayer, DamageLike, Enemy};
 use std::collections::HashMap;
 use yew::prelude::*;
 
@@ -66,7 +66,7 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
 }
 
 #[function_component(MakeTableHeader)]
-fn make_table_header(props: &MakeTableHeaderProps) -> Html {
+pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
     html! {
         <>
             {
@@ -91,28 +91,45 @@ fn make_table_header(props: &MakeTableHeaderProps) -> Html {
 
 #[derive(PartialEq, Properties)]
 pub struct MakeTableBodyProps {
-    pub damages: HashMap<String, InstanceDamage>,
+    pub damages: DamageLike,
     pub ordered_instances: Vec<String>,
 }
 
 #[function_component(MakeTableBody)]
-fn make_table_body(props: &MakeTableBodyProps) -> Html {
+pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
     html! {
-        <>
-            {
-                props.ordered_instances.iter().map(|key| {
-                    let value = props.damages.get(key).unwrap();
-                    html! {
-                        <td>
-                            <span class={value.damage_type.clone()}>
-                                { format!("{:.0}",value.minimum_damage) }
-                            </span>
-                        </td>
-                    }
-                })
-                .collect::<Html>()
+        props.ordered_instances.iter().map(|key| {
+            let value = props.damages.get(key).unwrap();
+            let text = if value.maximum_damage > 0.0 {
+                format!("{:.0} - {:.0}", value.minimum_damage, value.maximum_damage)
+            } else {
+                format!("{:.0}", value.minimum_damage)
+            };
+            let mut subtext = String::new();
+            if let Some(min_dmg_change) = value.min_dmg_change {
+                subtext.push_str(format!("{:.0}", min_dmg_change).as_str());
             }
-        </>
+            if let Some(max_dmg_change) = value.max_dmg_change {
+                if max_dmg_change > 0.0 {
+                    subtext.push_str(format!(" - {:.0}", max_dmg_change).as_str());
+                }
+            };
+            html! {
+                <td>
+                    <span class={value.damage_type.clone()}>
+                        if subtext.is_empty() {
+                            { text }
+                        } else {
+                            <div class="flex flex-col">
+                                <span>{ text }</span>
+                                <span class="text-zinc-400 text-[11px]">{ subtext }</span>
+                            </div>
+                        }
+                    </span>
+                </td>
+            }
+        })
+        .collect::<Html>()
     }
 }
 

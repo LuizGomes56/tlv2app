@@ -1,6 +1,7 @@
 use crate::{
     components::{
         base_table::BaseTable,
+        comparison_table::ComparisonTable,
         stacker::{StackDropper, StackSelector, Stacker},
     },
     model::realtime::{Realtime, Scoreboard},
@@ -91,13 +92,13 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                     </div>
                     <div class="grid grid-cols-2">
                         <div class="flex flex-col">
-                            <h2 class="text-center section-title">{ "Allies "}</h2>
+                            <h2 class="text-center section-title">{ "Ally Team "}</h2>
                             <div class="table-like">
                                 {ally_scoreboard.iter().map(|score| make_scoreboard(score)).collect::<Html>()}
                             </div>
                         </div>
                         <div class="flex flex-col">
-                            <h2 class="text-center section-title">{ "Enemies "}</h2>
+                            <h2 class="text-center section-title">{ "Show/Hide Enemies "}</h2>
                             {
                                 enemy_scoreboard.iter().enumerate().map(|(index, score)| {
                                     let hide_champion_hook_clone = hide_champion_hook.clone();
@@ -136,6 +137,66 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         enemies={enemies.clone()}
                     />
                 </div>
+                {
+                    props.game_data.compared_items.iter().map(|(item_id, value)| {
+                        html! {
+                            <div class="shadow-container">
+                                <div class="flex flex-col">
+                                    <div class="flex flex-col p-3">
+                                        <div class="flex justify-between items-center gap-4 pb-4 mb-2.5 border-b border-b border-b-zinc-600 w-full">
+                                            <div class="flex items-center gap-4">
+                                                <img
+                                                    class="w-8 h-8 aspect-square flex-shrink-0"
+                                                    src={format!("img/items/{}.png", item_id)}
+                                                    alt="Compared Item"
+                                                />
+                                                <span class="section-title font-bold">
+                                                    {value.name.clone()}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <img
+                                                    class="w-4 h-4 aspect-square flex-shrink-0"
+                                                    src="img/stats/GoldPer10Seconds.png"
+                                                    alt="Gold Cost"
+                                                />
+                                                <span class="text-yellow-300 section-title">{value.gold_cost}</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-3">
+                                            {value.prettified_stats.iter().map(|(stat_name, stat_value)| {
+                                                let stat_img_path = stat_name
+                                                    .to_string()
+                                                    .split(' ')
+                                                    .collect::<Vec<&str>>()
+                                                    .join("");
+                                                html! {
+                                                    <div class="flex items-center gap-2">
+                                                        <img
+                                                            class="w-4 h-4 aspect-square flex-shrink-0"
+                                                            src={format!("img/stats/{}.png", stat_img_path)}
+                                                            alt="Stat"
+                                                        />
+                                                        <span class="text-sm text-blue-200 section-title">
+                                                            {format!("{} {}", stat_value.to_string().trim_end_matches(".0"), stat_name)}
+                                                        </span>
+                                                    </div>
+                                                }
+                                            }).collect::<Html>()}
+                                        </div>
+                                    </div>
+                                    <div class="overflow-auto">
+                                        <ComparisonTable
+                                            current_player={current_player.clone()}
+                                            enemies={enemies.clone()}
+                                            item_id={item_id.clone()}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }).collect::<Html>()
+                }
                 <div class="p-4 shadow-container">
                     <div class="max-w-min flex flex-col gap-4">
                         <StackSelector

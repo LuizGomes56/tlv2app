@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(PartialEq, Clone, Deserialize)]
 pub struct Stats {
@@ -60,21 +61,41 @@ pub struct InstanceDamage {
     pub damage_type: String,
     pub damages_in_area: bool,
     pub damages_onhit: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_dmg_change: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_dmg_change: Option<f64>,
 }
 
-#[derive(PartialEq, Clone, Deserialize)]
-pub struct BasicDamages {
-    pub abilities: HashMap<String, InstanceDamage>,
-    pub items: HashMap<String, InstanceDamage>,
-    pub runes: HashMap<String, InstanceDamage>,
-}
+pub type DamageLike = HashMap<String, InstanceDamage>;
 
 #[derive(PartialEq, Clone, Deserialize)]
 pub struct Damages {
-    pub abilities: HashMap<String, InstanceDamage>,
-    pub items: HashMap<String, InstanceDamage>,
-    pub runes: HashMap<String, InstanceDamage>,
-    pub compared_items: HashMap<String, BasicDamages>,
+    pub abilities: DamageLike,
+    pub items: DamageLike,
+    pub runes: DamageLike,
+    pub compared_items: HashMap<String, SimulatedDamages>,
+}
+
+#[derive(PartialEq, Clone, Deserialize)]
+pub struct ComparedDamage {
+    pub total: f64,
+    pub change: f64,
+    pub damages: DamageLike,
+}
+
+#[derive(PartialEq, Clone, Deserialize)]
+pub struct SimulatedDamages {
+    pub abilities: ComparedDamage,
+    pub items: ComparedDamage,
+    pub runes: ComparedDamage,
+}
+
+#[derive(PartialEq, Clone, Deserialize)]
+pub struct DragonMultipliers {
+    pub earth: f64,
+    pub fire: f64,
+    pub chemtech: f64,
 }
 
 #[derive(PartialEq, Clone, Deserialize)]
@@ -94,9 +115,8 @@ pub struct Enemy {
 #[derive(PartialEq, Clone, Deserialize)]
 pub struct ItemCompared {
     pub name: String,
-    pub has_active: bool,
     pub gold_cost: usize,
-    pub prettified_stats: HashMap<String, String>,
+    pub prettified_stats: HashMap<String, Value>,
 }
 
 #[derive(PartialEq, Clone, Deserialize)]
@@ -120,4 +140,7 @@ pub struct Realtime {
     pub recommended_items: Vec<usize>,
     pub compared_items: HashMap<String, ItemCompared>,
     pub scoreboard: Vec<Scoreboard>,
+    pub best_item: usize,
+    pub enemy_dragon_multipliers: DragonMultipliers,
+    pub ally_dragon_multipliers: DragonMultipliers,
 }
