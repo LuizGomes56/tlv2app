@@ -7,7 +7,14 @@ body {
     color: #ffffff;
 }
 
+table span,
 .text-shadow {
+    text-wrap: nowrap;
+    filter: drop-shadow(0px 0px 1px black);
+    text-shadow: 0px 1.25px 0px black;
+}
+
+.img-letter {
     position: absolute;
     font-weight: 700;
     filter: drop-shadow(1.25px 1.25px 0px black);
@@ -15,7 +22,6 @@ body {
 }
 
 .shadow-container {
-    background-color: #10192b;
     box-shadow: 0 0 10px #08080f;
 }
 
@@ -71,6 +77,12 @@ table thead tr {
     background-color: #1e293b;
 }
 
+.img-clipped {
+    width: 100%;
+    object-fit: cover;
+    object-position: 0% 15%;
+}
+
 table tbody {
     font-size: 13px;
 }
@@ -94,13 +106,6 @@ table img {
     width: 32px;
     height: 32px;
     object-fit: contain;
-}
-
-.section-title,
-table span {
-    text-wrap: nowrap;
-    filter: drop-shadow(0px 0px 1px black);
-    text-shadow: 0px 1.25px 0px black;
 }
 
 table th div {

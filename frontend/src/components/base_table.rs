@@ -60,7 +60,7 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
                 src={img_path}
                 alt="Instance Icon"
             />
-            <span class="text-shadow">{ text_content }</span>
+            <span class="img-letter">{ text_content }</span>
         </>
     }
 }
@@ -121,8 +121,8 @@ pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
                             { text }
                         } else {
                             <div class="flex flex-col">
-                                <span>{ text }</span>
-                                <span class="text-zinc-400 text-[11px]">{ subtext }</span>
+                                <p>{ text }</p>
+                                <p class="text-zinc-400 text-[11px]">{ subtext }</p>
                             </div>
                         }
                     </span>

@@ -181,7 +181,7 @@ pub struct StackSelectorProps {
 pub fn stack_selector(props: &StackSelectorProps) -> Html {
     html! {
         <div class="flex flex-col gap-4">
-            <h2 class="section-title text-xl font-bold">
+            <h2 class="text-shadow text-xl font-bold">
                 { "Selector" }
             </h2>
             <div class="flex flex-wrap gap-2">
@@ -222,7 +222,7 @@ pub fn stack_dropper(props: &StackDropperProps) -> Html {
             {
                 if stack_instances.len() > 0 {
                     html!{
-                        <h2 class="section-title text-xl font-bold">
+                        <h2 class="text-shadow text-xl font-bold">
                             { "Stack" }
                         </h2>
                     }

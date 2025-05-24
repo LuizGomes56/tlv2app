@@ -4,7 +4,7 @@ mod tauriapp;
 
 use std::rc::Rc;
 
-use components::realtime::RealtimeDisplay;
+use components::{header::Header, realtime::RealtimeDisplay};
 // use gloo::timers::callback::Interval;
 use model::{example::makeup_example, realtime::Realtime};
 // use tauriapp::invokers::get_realtime_game;
@@ -62,7 +62,8 @@ fn app() -> Html {
     // };
 
     html! {
-        <div>
+        <div class="flex flex-col">
+            <Header />
             // <input type="text" {oninput} />
             // <h2>{ format!("Code: {}", *game_code) }</h2>
             // <button onclick={start_game}>{ "Start Game" }</button>
