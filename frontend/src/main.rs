@@ -4,9 +4,9 @@ mod tauriapp;
 
 use std::rc::Rc;
 
-use components::{header::Header, realtime::RealtimeDisplay};
+use components::{calculator::Calculator, header::Header, realtime::RealtimeDisplay};
 // use gloo::timers::callback::Interval;
-use model::{example::makeup_example, realtime::Realtime};
+use model::{realtime::Realtime, realtime_example::makeup_example};
 // use tauriapp::invokers::get_realtime_game;
 // use web_sys::HtmlInputElement;
 use yew::prelude::*;
@@ -72,7 +72,8 @@ fn app() -> Html {
                 if game_data.is_some() {
                     if let Some(data) = game_data.as_ref() {
                         html! {
-                            <RealtimeDisplay game_data={data} game_code={(*game_code).clone()} />
+                            <Calculator />
+                            // <RealtimeDisplay game_data={data} game_code={(*game_code).clone()} />
                         }
                     } else {
                         html! {}
