@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::realtime::{BasicStats, ComparedItem, Damages, RealResists, Stats};
 
-#[derive(Deserialize)]
+#[derive(Clone, PartialEq, Deserialize)]
 pub struct CurrentPlayerX {
     pub damaging_abilities: HashMap<String, String>,
     pub damaging_items: HashMap<usize, String>,
@@ -15,7 +15,7 @@ pub struct CurrentPlayerX {
     pub current_stats: Stats,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, PartialEq, Deserialize)]
 pub struct EnemyX {
     pub champion_id: String,
     pub level: usize,
@@ -26,7 +26,7 @@ pub struct EnemyX {
     pub real_resists: RealResists,
 }
 
-#[derive(Deserialize)]
+#[derive(PartialEq, Clone, Deserialize)]
 pub struct Calculator {
     pub current_player: CurrentPlayerX,
     pub enemies: Vec<EnemyX>,
@@ -83,6 +83,18 @@ pub struct EnemyPlayersX {
     pub stats: Option<BasicStats>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stacks: Option<usize>,
+}
+
+impl EnemyPlayersX {
+    pub fn new() -> EnemyPlayersX {
+        EnemyPlayersX {
+            champion_id: String::from("Gwen"),
+            items: Vec::from([4645, 3115, 3153]),
+            level: 14,
+            stats: None,
+            stacks: None,
+        }
+    }
 }
 
 #[derive(PartialEq, Clone, Serialize)]

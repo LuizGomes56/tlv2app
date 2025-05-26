@@ -1,10 +1,13 @@
+use std::ops::Deref;
+
 use wasm_bindgen::JsValue;
 use web_sys::{HtmlInputElement, console};
 use yew::prelude::*;
 
 use crate::{
     IMG_CDN, apply_stat,
-    model::calculator::{ActivePlayerX, EnemyPlayersX},
+    model::calculator::{ActivePlayerX, Calculator, EnemyPlayersX, GameX},
+    tauriapp::invokers::get_calculator_result,
 };
 
 #[derive(PartialEq, Properties)]
@@ -24,12 +27,12 @@ fn AbilityLevelSelector(props: &AbilityLevelSelectorProps) -> Html {
         Callback::from(move |e: InputEvent| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let mut current_state = (*state_handler).clone();
-            if let Some(input_value) = input.value().parse::<f64>().ok() {
+            if let Some(input_value) = input.value().parse::<usize>().ok() {
                 match keyname {
-                    "Q" => current_state.abilities.q = input_value as usize,
-                    "W" => current_state.abilities.w = input_value as usize,
-                    "E" => current_state.abilities.e = input_value as usize,
-                    "R" => current_state.abilities.r = input_value as usize,
+                    "Q" => current_state.abilities.q = input_value,
+                    "W" => current_state.abilities.w = input_value,
+                    "E" => current_state.abilities.e = input_value,
+                    "R" => current_state.abilities.r = input_value,
                     _ => (),
                 }
             }
@@ -38,15 +41,18 @@ fn AbilityLevelSelector(props: &AbilityLevelSelectorProps) -> Html {
     };
 
     html! {
-        <div class="flex items-center gap-2">
-            <img
-                class="h-8 w-8 aspect-square"
-                src={props.image_url.clone()}
-                alt="Ability"
-            />
+        <div class="grid grid-cols-[auto_1fr] gap-2">
+            <div class="relative flex items-center justify-center">
+                <img
+                    class="h-8 w-8 aspect-square"
+                    src={props.image_url.clone()}
+                    alt="Ability"
+                />
+                <span class="img-letter">{keyname}</span>
+            </div>
             <input
                 oninput={oninput}
-                class="bg-slate-800 w-16 h-8 rounded-md text-center"
+                class="w-full bg-slate-800 h-8 text-center"
                 type="number"
                 value={value.to_string()}
                 min="0"
@@ -84,19 +90,19 @@ fn StatSelector(props: &StatSelectorProps) -> Html {
 
     html! {
         <>
+            <input
+                oninput={oninput}
+                value={value}
+                class="text-sm bg-slate-800 w-16 h-6 text-center"
+                type="text"
+                aria-label="Ability"
+            />
             <img
                 class="h-4 w-4 aspect-square"
                 src={props.image_url.clone()}
                 alt="Ability"
             />
-            <span>{name}</span>
-            <input
-                oninput={oninput}
-                value={value}
-                class="rounded-md bg-slate-800 w-16 h-6 text-center"
-                type="text"
-                aria-label="Ability"
-            />
+            <span class="text-sm text-shadow">{name}</span>
         </>
     }
 }
@@ -135,7 +141,7 @@ impl StatsValue {
             StatsValue::CritChance(v) => ("Crit Chance", v.clone()),
             StatsValue::CritDamage(v) => ("Crit Damage", v.clone()),
             StatsValue::MaxHealth(v) => ("Max Health", v.clone()),
-            StatsValue::MagicPenetrationFlat(v) => ("Magic Pen Flat", v.clone()),
+            StatsValue::MagicPenetrationFlat(v) => ("Magic Pen", v.clone()),
             StatsValue::MagicPenetrationPercent(v) => ("% Magic Pen", v.clone()),
             StatsValue::MagicResist(v) => ("Magic Resist", v.clone()),
             StatsValue::MaxMana(v) => ("Max Mana", v.clone()),
@@ -145,20 +151,33 @@ impl StatsValue {
 }
 
 #[function_component]
-pub fn Calculator() -> Html {
+pub fn CalculatorDisplay() -> Html {
     let active_player = use_state(|| ActivePlayerX::new());
-    let enemy_players = use_state(|| Vec::<EnemyPlayersX>::new());
+    let enemy_players = use_state(|| Vec::<EnemyPlayersX>::from([EnemyPlayersX::new()]));
+    let calculator_state = use_state(|| Option::<Calculator>::None);
 
-    {
-        let active_player_clone = active_player.clone();
-        let enemy_players_clone = enemy_players.clone();
-        use_effect_with(
-            (active_player_clone, enemy_players_clone),
-            |(active_player_clone, enemy_players)| {
-                console::log_1(&JsValue::from_str(&format!("{:#?}", active_player_clone)));
-            },
-        );
-    }
+    use_effect_with(
+        (
+            active_player.clone(),
+            enemy_players.clone(),
+            calculator_state.clone(),
+        ),
+        |(active_player, enemy_players, calculator_state)| {
+            let game_state = GameX {
+                active_player: active_player.deref().clone(),
+                enemy_players: enemy_players.deref().clone(),
+                ally_earth_dragons: 0,
+                ally_fire_dragons: 0,
+                enemy_earth_dragons: 0,
+            };
+
+            get_calculator_result(game_state, calculator_state.clone());
+
+            // let game_state_json = JsValue::from_str(&serde_json::to_string(&game_state).unwrap());
+            // let result = invoke_calculate(game_state_json);
+            // println!("Result: {}", result);
+        },
+    );
 
     html! {
         <div class="flex justify-center ">
@@ -200,7 +219,7 @@ pub fn Calculator() -> Html {
                         }
                     }).collect::<Html>()}
                 </section>
-                <div class="grid grid-cols-[auto_auto_1fr] gap-2 pb-8">
+                <div class="grid grid-cols-[auto_auto_1fr_auto_auto_1fr] items-center gap-2 pb-8">
                     {[
                         (
                             StatsValue::Level(active_player.level.to_string()),
@@ -213,10 +232,6 @@ pub fn Calculator() -> Html {
                         (
                             StatsValue::AttackDamage(active_player.champion_stats.attack_damage.to_string()),
                             format!("{}/stats/AttackDamage.png", IMG_CDN)
-                        ),
-                        (
-                            StatsValue::Armor(active_player.champion_stats.armor.to_string()),
-                            format!("{}/stats/Armor.png", IMG_CDN)
                         ),
                         (
                             StatsValue::ArmorPenetrationFlat(active_player.champion_stats.armor_penetration_flat.to_string()),
@@ -235,14 +250,6 @@ pub fn Calculator() -> Html {
                             format!("{}/stats/MagicPenetration.png", IMG_CDN)
                         ),
                         (
-                            StatsValue::MagicResist(active_player.champion_stats.magic_resist.to_string()),
-                            format!("{}/stats/MagicResist.png", IMG_CDN)
-                        ),
-                        (
-                            StatsValue::AttackSpeed(active_player.champion_stats.attack_speed.to_string()),
-                            format!("{}/stats/AttackSpeed.png", IMG_CDN)
-                        ),
-                        (
                             StatsValue::CritChance(active_player.champion_stats.crit_chance.to_string()),
                             format!("{}/stats/CriticalStrikeChance.png", IMG_CDN)
                         ),
@@ -257,6 +264,18 @@ pub fn Calculator() -> Html {
                         (
                             StatsValue::CurrentHealth(active_player.champion_stats.max_health.to_string()),
                             format!("{}/stats/Health.png", IMG_CDN)
+                        ),
+                        (
+                            StatsValue::Armor(active_player.champion_stats.armor.to_string()),
+                            format!("{}/stats/Armor.png", IMG_CDN)
+                        ),
+                        (
+                            StatsValue::MagicResist(active_player.champion_stats.magic_resist.to_string()),
+                            format!("{}/stats/MagicResist.png", IMG_CDN)
+                        ),
+                        (
+                            StatsValue::AttackSpeed(active_player.champion_stats.attack_speed.to_string()),
+                            format!("{}/stats/AttackSpeed.png", IMG_CDN)
                         ),
                         (
                             StatsValue::MaxMana(active_player.champion_stats.max_mana.to_string()),

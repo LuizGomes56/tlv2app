@@ -5,7 +5,10 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::console;
 use yew::prelude::*;
 
-use crate::model::realtime::Realtime;
+use crate::model::{
+    calculator::{Calculator, GameX},
+    realtime::Realtime,
+};
 
 #[wasm_bindgen(module = "/public/glue.js")]
 unsafe extern "C" {
@@ -14,6 +17,31 @@ unsafe extern "C" {
 
     #[wasm_bindgen(js_name = invoke_get_realtime_game, catch)]
     pub async fn invoke_get_realtime_game() -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(js_name = invoke_calculate, catch)]
+    pub async fn invoke_calculate(game_state: JsValue) -> Result<JsValue, JsValue>;
+}
+
+pub fn get_calculator_result(game_state: GameX, state_handler: UseStateHandle<Option<Calculator>>) {
+    spawn_local(async move {
+        let game_json = serde_json::to_string(&game_state).unwrap();
+        match invoke_calculate(JsValue::from_str(&game_json)).await {
+            Ok(value) => {
+                console::log_1(&value);
+                match serde_json::from_str(&value.as_string().unwrap()) {
+                    Ok(calculator_data) => {
+                        state_handler.set(Some(calculator_data));
+                    }
+                    Err(e) => {
+                        console::log_1(&JsValue::from_str(e.to_string().as_str()));
+                    }
+                }
+            }
+            Err(e) => {
+                console::log_1(&e);
+            }
+        }
+    });
 }
 
 pub fn get_realtime_game(game_data: UseStateHandle<Option<Rc<Realtime>>>) {
