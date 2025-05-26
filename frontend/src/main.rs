@@ -1,4 +1,5 @@
 mod components;
+mod macros;
 mod model;
 mod tauriapp;
 
@@ -11,9 +12,11 @@ use model::{realtime::Realtime, realtime_example::makeup_example};
 // use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
+pub const IMG_CDN: &str = "http://localhost:8082/cdn";
+
 #[function_component(App)]
 fn app() -> Html {
-    let game_code = use_state(|| String::from("000000"));
+    // let game_code = use_state(|| String::from("000000"));
     let game_data = use_state(|| Option::<Rc<Realtime>>::None);
     // let interval_handle = use_state(|| None);
 

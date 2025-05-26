@@ -1,4 +1,7 @@
-use crate::model::realtime::{CurrentPlayer, DamageLike, Enemy};
+use crate::{
+    IMG_CDN,
+    model::realtime::{CurrentPlayer, DamageLike, Enemy},
+};
 use std::collections::HashMap;
 use yew::prelude::*;
 
@@ -6,7 +9,7 @@ pub fn champion_td(champion_id: &str) -> Html {
     html! {
         <td>
             <img
-                src={format!("img/champions/{}.png", champion_id)}
+                src={format!("{}/champions/{}.png", IMG_CDN, champion_id)}
                 alt="Champion"
             />
         </td>
@@ -26,17 +29,18 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
     let is_attack_related = first_char == 'C' || first_char == 'A';
     let img_path = if instance_name == "abilities" {
         if is_attack_related {
-            format!("img/{}/{}.png", instance_name, first_char)
+            format!("{}/{}/{}.png", IMG_CDN, instance_name, first_char)
         } else {
             format!(
-                "img/{}/{}{}.png",
+                "{}/{}/{}{}.png",
+                IMG_CDN,
                 instance_name,
                 champion_id.unwrap_or_default(),
                 first_char
             )
         }
     } else {
-        format!("img/{}/{}.png", instance_name, keyname)
+        format!("{}/{}/{}.png", IMG_CDN, instance_name, keyname)
     };
     let text_content = if instance_name == "abilities" && !is_attack_related {
         if !remaining.is_empty() {

@@ -1,4 +1,5 @@
 use crate::{
+    IMG_CDN,
     components::{
         base_table::BaseTable,
         comparison_table::ComparisonTable,
@@ -23,7 +24,7 @@ fn make_scoreboard(score: &Scoreboard) -> Html {
             <div class="grid grid-cols-[auto_1fr] items-center gap-1.5">
                 <img
                     class="min-w-8 h-8 aspect-square flex-shrink-0"
-                    src={format!("img/champions/{}.png", score.champion_id.clone())}
+                    src={format!("{}/champions/{}.png", IMG_CDN, score.champion_id.clone())}
                     alt="Champion"
                 />
                 <div class="flex flex-col leading-none overflow-hidden">
@@ -76,7 +77,8 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                     <img
                         class="img-clipped h-32"
                         src={format!(
-                            "img/centered/{}_0.jpg",
+                            "{}/centered/{}_0.jpg",
+                            IMG_CDN,
                             current_player.champion_id
                         )}
                         alt="Champion"
@@ -88,7 +90,11 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                 </div>
                 <div class="flex flex-col shadow-container bg-slate-900">
                     <div class="cursor-pointer flex items-center gap-4 p-4 justify-center">
-                        <img class="h-4 w-4 aspect-square flex-shrink-0" src="img/other/copy.svg" alt="Copy" />
+                        <img
+                            class="h-4 w-4 aspect-square flex-shrink-0"
+                            src={format!("{}/other/copy.svg", IMG_CDN)}
+                            alt="Copy"
+                        />
                         <span class="font-bold text-sm text-shadow">{format!("Game Code - {}", props.game_code)}</span>
                     </div>
                     <div class="grid grid-cols-2">
@@ -149,7 +155,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                                             <div class="flex items-center gap-4">
                                                 <img
                                                     class="w-8 h-8 aspect-square flex-shrink-0"
-                                                    src={format!("img/items/{}.png", item_id)}
+                                                    src={format!("{}/items/{}.png", IMG_CDN, item_id)}
                                                     alt="Compared Item"
                                                 />
                                                 <span class="text-shadow font-bold">
@@ -159,7 +165,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                                             <div class="flex items-center gap-1">
                                                 <img
                                                     class="w-4 h-4 aspect-square flex-shrink-0"
-                                                    src="img/stats/GoldPer10Seconds.png"
+                                                    src={format!("{}/stats/GoldPer10Seconds.png", IMG_CDN)}
                                                     alt="Gold Cost"
                                                 />
                                                 <span class="text-yellow-300 text-shadow">{value.gold_cost}</span>
@@ -176,7 +182,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                                                     <div class="flex items-center gap-2">
                                                         <img
                                                             class="w-4 h-4 aspect-square flex-shrink-0"
-                                                            src={format!("img/stats/{}.png", stat_img_path)}
+                                                            src={format!("{}/stats/{}.png", IMG_CDN, stat_img_path)}
                                                             alt="Stat"
                                                         />
                                                         <span class="text-sm text-blue-200 text-shadow">

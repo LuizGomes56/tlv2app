@@ -4,13 +4,14 @@ use uuid::Uuid;
 use yew::prelude::*;
 
 use crate::{
+    IMG_CDN,
     components::base_table::create_image,
     model::realtime::{Enemy, InstanceDamage},
 };
 
 #[derive(PartialEq, Properties)]
 pub struct MakeStackerHeaderProps {
-    pub urls: Vec<&'static str>,
+    pub urls: Vec<String>,
 }
 
 #[function_component(MakeStackerHeader)]
@@ -22,7 +23,7 @@ pub fn make_stacker_header(props: &MakeStackerHeaderProps) -> Html {
             html! {
                 <th>
                     <img
-                        src={*url}
+                        src={url.clone()}
                         alt="StackerTable"
                     />
                 </th>
@@ -55,9 +56,9 @@ pub fn stacker(props: &StackerProps) -> Html {
                         <span>{ "Name" }</span>
                     </th>
                     <MakeStackerHeader urls={vec![
-                        "img/other/sigma.svg",
-                        "img/other/heart.svg",
-                        "img/other/percent.svg"
+                        format!("{}/other/sigma.svg", IMG_CDN),
+                        format!("{}/other/heart.svg", IMG_CDN),
+                        format!("{}/other/percent.svg", IMG_CDN)
                     ]} />
                 </tr>
             </thead>
@@ -92,7 +93,7 @@ pub fn stacker(props: &StackerProps) -> Html {
                             <td>
                                 <div class="flex items-center gap-2">
                                     <img
-                                        src={format!("img/champions/{}.png", &enemy.champion_id)}
+                                        src={format!("{}/champions/{}.png", IMG_CDN, &enemy.champion_id)}
                                         alt="Champion"
                                     />
                                     <span class="text-sm max-w-24 truncate">

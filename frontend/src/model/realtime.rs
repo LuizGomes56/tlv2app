@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(PartialEq, Clone, Deserialize)]
+#[derive(Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Stats {
     pub ability_power: f64,
     pub armor: f64,
@@ -23,7 +23,7 @@ pub struct Stats {
     pub current_mana: f64,
 }
 
-#[derive(PartialEq, Clone, Deserialize)]
+#[derive(Default, PartialEq, Clone, Serialize, Deserialize)]
 pub struct BasicStats {
     pub armor: f64,
     pub health: f64,
@@ -113,10 +113,16 @@ pub struct Enemy {
 }
 
 #[derive(PartialEq, Clone, Deserialize)]
-pub struct ItemCompared {
+pub struct ComparedItem {
     pub name: String,
     pub gold_cost: usize,
     pub prettified_stats: HashMap<String, Value>,
+}
+
+#[derive(PartialEq, Clone, Deserialize)]
+pub struct RealResists {
+    pub magic_resist: f64,
+    pub armor: f64,
 }
 
 #[derive(PartialEq, Clone, Deserialize)]
@@ -138,7 +144,7 @@ pub struct Realtime {
     pub enemies: Vec<Enemy>,
     pub game_information: GameInformation,
     pub recommended_items: Vec<usize>,
-    pub compared_items: HashMap<String, ItemCompared>,
+    pub compared_items: HashMap<String, ComparedItem>,
     pub scoreboard: Vec<Scoreboard>,
     pub best_item: usize,
     pub enemy_dragon_multipliers: DragonMultipliers,
