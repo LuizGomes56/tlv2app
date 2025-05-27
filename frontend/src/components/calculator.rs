@@ -1,13 +1,19 @@
 use std::ops::Deref;
 
-use wasm_bindgen::JsValue;
-use web_sys::{HtmlInputElement, console};
+use serde::Deserialize;
+use serde_json::json;
+use wasm_bindgen_futures::spawn_local;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::{
     IMG_CDN, apply_stat,
-    model::calculator::{ActivePlayerX, Calculator, EnemyPlayersX, GameX},
-    tauriapp::invokers::get_calculator_result,
+    components::{
+        base_table::BaseTable,
+        comparison_table::ComparisonTable,
+        stacker::{StackDropper, StackInstance, StackSelector, Stacker},
+    },
+    model::calculator::{ActivePlayerX, Calculator, CurrentPlayerX, EnemyPlayersX, EnemyX, GameX},
 };
 
 #[derive(PartialEq, Properties)]
@@ -150,37 +156,54 @@ impl StatsValue {
     }
 }
 
+#[derive(Deserialize)]
+struct ServerResponse {
+    data: Calculator,
+}
+
 #[function_component]
 pub fn CalculatorDisplay() -> Html {
     let active_player = use_state(|| ActivePlayerX::new());
     let enemy_players = use_state(|| Vec::<EnemyPlayersX>::from([EnemyPlayersX::new()]));
     let calculator_state = use_state(|| Option::<Calculator>::None);
+    let stack = use_state(|| Vec::<StackInstance>::new());
 
-    use_effect_with(
-        (
-            active_player.clone(),
-            enemy_players.clone(),
-            calculator_state.clone(),
-        ),
-        |(active_player, enemy_players, calculator_state)| {
-            let game_state = GameX {
-                active_player: active_player.deref().clone(),
-                enemy_players: enemy_players.deref().clone(),
-                ally_earth_dragons: 0,
-                ally_fire_dragons: 0,
-                enemy_earth_dragons: 0,
-            };
+    {
+        let calculator_state = calculator_state.clone();
+        use_effect_with(
+            (active_player.clone(), enemy_players.clone()),
+            |(active_player, enemy_players)| {
+                let game_state = GameX {
+                    active_player: active_player.deref().clone(),
+                    enemy_players: enemy_players.deref().clone(),
+                    ally_earth_dragons: 0,
+                    ally_fire_dragons: 0,
+                    enemy_earth_dragons: 0,
+                };
 
-            get_calculator_result(game_state, calculator_state.clone());
+                spawn_local(async move {
+                    let client = reqwest::Client::new();
+                    let json_value = json!({
+                        "game": game_state,
+                        "simulated_items": [3115, 3153, 4645, 3089]
+                    });
 
-            // let game_state_json = JsValue::from_str(&serde_json::to_string(&game_state).unwrap());
-            // let result = invoke_calculate(game_state_json);
-            // println!("Result: {}", result);
-        },
-    );
+                    let res = client
+                        .post("http://localhost:8082/api/games/calculator")
+                        .json(&json_value)
+                        .send()
+                        .await
+                        .unwrap();
+
+                    let result = res.json::<ServerResponse>().await.unwrap();
+                    calculator_state.set(Some(result.data));
+                });
+            },
+        );
+    }
 
     html! {
-        <div class="flex justify-center ">
+        <div class="flex justify-center">
             <div class="flex flex-col max-h-[calc(100vh-56px)] overflow-y-auto">
                 <div class="flex relative">
                     <img
@@ -296,7 +319,53 @@ pub fn CalculatorDisplay() -> Html {
                     }).collect::<Html>()}
                 </div>
             </div>
-            <span>{ "..." }</span>
+            {
+                if let Some(calculator_data) = (*calculator_state).clone() {
+                    let current_player = calculator_data.current_player.clone();
+                    let enemies = calculator_data.enemies.clone();
+
+                    html! {
+                        <div class="flex flex-col gap-4 p-4 max-w-3xl w-full">
+                            <div class="overflow-auto">
+                                <BaseTable<CurrentPlayerX, EnemyX>
+                                    current_player={current_player.clone()}
+                                    enemies={enemies.clone()}
+                                />
+                            </div>
+                            <div class="overflow-auto">
+                                <ComparisonTable<CurrentPlayerX, EnemyX>
+                                    current_player={current_player.clone()}
+                                    enemies={enemies.clone()}
+                                    item_id={calculator_data.best_item.clone().to_string()}
+                                />
+                            </div>
+                            <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-slate-900">
+                                <div class="flex flex-col gap-4">
+                                    <StackSelector
+                                        stack={stack.clone()}
+                                        champion_id={current_player.champion_id.clone()}
+                                        abilities={current_player.damaging_abilities.clone()}
+                                        items={current_player.damaging_items.clone()}
+                                        runes={current_player.damaging_runes.clone()}
+                                    />
+                                    <StackDropper
+                                        champion_id={current_player.champion_id.clone()}
+                                        stack={stack.clone()}
+                                    />
+                                </div>
+                                <div class="overflow-auto">
+                                    <Stacker<EnemyX>
+                                        stack={(*stack).clone()}
+                                        enemies={enemies.clone()}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                } else {
+                    html! {}
+                }
+            }
         </div>
     }
 }

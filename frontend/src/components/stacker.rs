@@ -6,7 +6,10 @@ use yew::prelude::*;
 use crate::{
     IMG_CDN,
     components::base_table::create_image,
-    model::realtime::{Enemy, InstanceDamage},
+    model::{
+        realtime::{Enemy, InstanceDamage},
+        traits::EnemyLike,
+    },
 };
 
 #[derive(PartialEq, Properties)]
@@ -41,13 +44,16 @@ pub struct StackInstance {
 }
 
 #[derive(PartialEq, Properties)]
-pub struct StackerProps {
+pub struct StackerProps<T>
+where
+    T: EnemyLike + PartialEq,
+{
     pub stack: Vec<StackInstance>,
-    pub enemies: Vec<Enemy>,
+    pub enemies: Vec<T>,
 }
 
 #[function_component(Stacker)]
-pub fn stacker(props: &StackerProps) -> Html {
+pub fn stacker<T: EnemyLike + PartialEq>(props: &StackerProps<T>) -> Html {
     html! {
         <table>
             <thead>
@@ -65,6 +71,10 @@ pub fn stacker(props: &StackerProps) -> Html {
             <tbody>
                 {props.enemies.iter().map(|enemy| {
                     let mut total_damage = 0f64;
+                    let damages = enemy.get_damages();
+                    let current_stats = enemy.get_current_stats();
+                    let enemy_champion_id = enemy.get_champion_id();
+                    let enemy_champion_name = enemy.get_champion_name();
 
                     for instance_value in props.stack.iter() {
                         let mut accumulator = |damagelike: &Option<&InstanceDamage>| {
@@ -78,26 +88,26 @@ pub fn stacker(props: &StackerProps) -> Html {
                             }
                         };
                         match instance_value.source.as_str() {
-                            "abilities" => accumulator(&enemy.damages.abilities.get(&instance_value.keyname)),
-                            "items" => accumulator(&enemy.damages.items.get(&instance_value.keyname)),
-                            "runes" => accumulator(&enemy.damages.runes.get(&instance_value.keyname)),
+                            "abilities" => accumulator(&damages.abilities.get(&instance_value.keyname)),
+                            "items" => accumulator(&damages.items.get(&instance_value.keyname)),
+                            "runes" => accumulator(&damages.runes.get(&instance_value.keyname)),
                             _ => {}
                         }
                     }
 
-                    let final_health = enemy.current_stats.health - total_damage;
-                    let final_health_percent = final_health / enemy.current_stats.health;
+                    let final_health = current_stats.health - total_damage;
+                    let final_health_percent = final_health / current_stats.health;
 
                     html! {
                         <tr>
                             <td>
                                 <div class="flex items-center gap-2">
                                     <img
-                                        src={format!("{}/champions/{}.png", IMG_CDN, &enemy.champion_id)}
+                                        src={format!("{}/champions/{}.png", IMG_CDN, &enemy_champion_id)}
                                         alt="Champion"
                                     />
                                     <span class="text-sm max-w-24 truncate">
-                                        { enemy.champion_name.clone() }
+                                        { enemy_champion_name.clone() }
                                     </span>
                                 </div>
                             </td>
@@ -248,7 +258,7 @@ pub fn stack_dropper(props: &StackDropperProps) -> Html {
                     };
                     html! {
                         <button
-                            class="relative w-8 h-8 flex items-center justify-center"
+                            class="relative w-8 h-8 flex items-center cursor-pointer justify-center"
                             {onclick}
                         >
                             {create_image(

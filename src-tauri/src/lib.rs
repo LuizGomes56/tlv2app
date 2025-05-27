@@ -1,6 +1,5 @@
 use dotenvy::dotenv;
 use rand::Rng;
-use serde_json::{json, Value};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{
     env,
@@ -11,7 +10,7 @@ use uuid::Uuid;
 mod database;
 mod model;
 
-use database::db::{commit_game_register, ServerResponse};
+use database::db::commit_game_register;
 
 #[derive(Clone)]
 struct AppState {
@@ -24,23 +23,6 @@ struct AppState {
 #[tauri::command]
 fn send_code(state: State<'_, Arc<AppState>>) -> String {
     state.game_code.lock().unwrap().clone()
-}
-
-#[tauri::command]
-async fn get_calculator_value(game_state: String) -> Result<String, String> {
-    let game_json: Value = serde_json::from_str(&game_state).unwrap();
-    let client = reqwest::Client::new();
-    let res = client
-        .post("http://localhost:8082/api/games/calculator")
-        .json(&json!({
-            "simulated_items": [3115, 3153, 4645, 3089],
-            "game": game_json
-        }))
-        .send()
-        .await
-        .unwrap();
-    let result = res.json::<ServerResponse>().await.unwrap();
-    Ok(result.data.unwrap().to_string())
 }
 
 #[tauri::command]
@@ -61,11 +43,7 @@ pub fn run() {
     dotenv().ok();
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            send_code,
-            get_realtime_game,
-            get_calculator_value
-        ])
+        .invoke_handler(tauri::generate_handler![send_code, get_realtime_game,])
         .setup(|app| {
             let database_url = env::var("DATABASE_URL").expect("DATABASE_URL não definido");
 

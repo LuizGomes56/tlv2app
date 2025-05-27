@@ -1,6 +1,9 @@
 use crate::{
     IMG_CDN,
-    model::realtime::{CurrentPlayer, DamageLike, Enemy},
+    model::{
+        realtime::{CurrentPlayer, DamageLike, Enemy},
+        traits::{CurrentPlayerLike, EnemyLike},
+    },
 };
 use std::collections::HashMap;
 use yew::prelude::*;
@@ -138,31 +141,42 @@ pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
 }
 
 #[derive(PartialEq, Properties)]
-pub struct BaseTableProps {
-    pub current_player: CurrentPlayer,
-    pub enemies: Vec<Enemy>,
+pub struct BaseTableProps<T, U>
+where
+    T: CurrentPlayerLike + PartialEq,
+    U: EnemyLike + PartialEq,
+{
+    pub current_player: T,
+    pub enemies: Vec<U>,
 }
 
 #[function_component(BaseTable)]
-pub fn base_table(props: &BaseTableProps) -> Html {
+pub fn base_table<T, U>(props: &BaseTableProps<T, U>) -> Html
+where
+    T: CurrentPlayerLike + PartialEq,
+    U: EnemyLike + PartialEq,
+{
+    let (damaging_abilities, damaging_items, damaging_runes) =
+        props.current_player.get_damaging_instances();
+    let champion_id = props.current_player.get_champion_id();
     html! {
         <table class="w-full">
             <thead>
                 <tr>
                     <th></th>
                     <MakeTableHeader
-                        champion_id={props.current_player.champion_id.clone()}
-                        map={props.current_player.damaging_abilities.clone()}
+                        champion_id={champion_id.clone()}
+                        map={damaging_abilities.clone()}
                         instance_name={"abilities"}
                     />
                     <MakeTableHeader
                         champion_id={Option::<String>::None}
-                        map={props.current_player.damaging_items.clone()}
+                        map={damaging_items.clone()}
                         instance_name={"items"}
                     />
                     <MakeTableHeader
                         champion_id={Option::<String>::None}
-                        map={props.current_player.damaging_runes.clone()}
+                        map={damaging_runes.clone()}
                         instance_name={"runes"}
                     />
                 </tr>
@@ -170,20 +184,22 @@ pub fn base_table(props: &BaseTableProps) -> Html {
             <tbody>
                 {
                     props.enemies.iter().map(|enemy| {
+                        let damages = enemy.get_damages();
+                        let enemy_champion_id = enemy.get_champion_id();
                         html! {
                             <tr>
-                                {champion_td(&enemy.champion_id)}
+                                {champion_td(&enemy_champion_id)}
                                 <MakeTableBody
-                                    damages={enemy.damages.abilities.clone()}
-                                    ordered_instances={props.current_player.damaging_abilities.keys().cloned().collect::<Vec<String>>()}
+                                    damages={damages.abilities.clone()}
+                                    ordered_instances={damaging_abilities.keys().cloned().collect::<Vec<String>>()}
                                 />
                                 <MakeTableBody
-                                    damages={enemy.damages.items.clone()}
-                                    ordered_instances={props.current_player.damaging_items.keys().cloned().collect::<Vec<String>>()}
+                                    damages={damages.items.clone()}
+                                    ordered_instances={damaging_items.keys().cloned().collect::<Vec<String>>()}
                                 />
                                 <MakeTableBody
-                                    damages={enemy.damages.runes.clone()}
-                                    ordered_instances={props.current_player.damaging_runes.keys().cloned().collect::<Vec<String>>()}
+                                    damages={damages.runes.clone()}
+                                    ordered_instances={damaging_runes.keys().cloned().collect::<Vec<String>>()}
                                 />
                             </tr>
                         }

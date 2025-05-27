@@ -5,7 +5,7 @@ use crate::{
         comparison_table::ComparisonTable,
         stacker::{StackDropper, StackSelector, Stacker},
     },
-    model::realtime::{Realtime, Scoreboard},
+    model::realtime::{CurrentPlayer, Enemy, Realtime, Scoreboard},
 };
 use std::rc::Rc;
 use yew::prelude::*;
@@ -140,7 +140,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
             </div>
             <div class="flex flex-col gap-4 flex-1">
                 <div class="shadow-container bg-slate-900">
-                    <BaseTable
+                    <BaseTable<CurrentPlayer, Enemy>
                         current_player={current_player.clone()}
                         enemies={enemies.clone()}
                     />
@@ -194,7 +194,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                                         </div>
                                     </div>
                                     <div class="overflow-auto">
-                                        <ComparisonTable
+                                        <ComparisonTable<CurrentPlayer, Enemy>
                                             current_player={current_player.clone()}
                                             enemies={enemies.clone()}
                                             item_id={item_id.clone()}
@@ -220,7 +220,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         />
                     </div>
                     <div class="overflow-auto">
-                        <Stacker
+                        <Stacker<Enemy>
                             stack={(*stack).clone()}
                             enemies={enemies.clone()}
                         />

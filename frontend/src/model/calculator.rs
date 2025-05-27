@@ -6,9 +6,10 @@ use super::realtime::{BasicStats, ComparedItem, Damages, RealResists, Stats};
 
 #[derive(Clone, PartialEq, Deserialize)]
 pub struct CurrentPlayerX {
+    pub champion_id: String,
     pub damaging_abilities: HashMap<String, String>,
-    pub damaging_items: HashMap<usize, String>,
-    pub damaging_runes: HashMap<usize, String>,
+    pub damaging_items: HashMap<String, String>,
+    pub damaging_runes: HashMap<String, String>,
     pub level: usize,
     pub base_stats: BasicStats,
     pub bonus_stats: BasicStats,
@@ -17,6 +18,7 @@ pub struct CurrentPlayerX {
 
 #[derive(Clone, PartialEq, Deserialize)]
 pub struct EnemyX {
+    pub champion_name: String,
     pub champion_id: String,
     pub level: usize,
     pub damages: Damages,
