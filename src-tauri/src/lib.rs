@@ -22,20 +22,39 @@ struct AppState {
 
 #[tauri::command]
 fn send_code(state: State<'_, Arc<AppState>>) -> String {
-    state.game_code.lock().unwrap().clone()
+    match state.game_code.lock() {
+        Ok(guard) => guard.clone(),
+        Err(_) => "Erro ao acessar o código do jogo".to_string(),
+    }
 }
 
 #[tauri::command]
 async fn get_realtime_game(state: State<'_, Arc<AppState>>) -> Result<String, String> {
     let pool = state.pool.clone();
-    let game_id = state.game_id.lock().unwrap().clone();
-    let game_code = state.game_code.lock().unwrap().clone();
-    let mut game_started = state.game_started.lock().unwrap().clone();
-
-    let commit_register = commit_game_register(&pool, &mut game_started, game_code, game_id).await;
-    let mut game_started_guard = state.game_started.lock().unwrap();
+    let game_id = state
+        .game_id
+        .lock()
+        .map_err(|_| "Falha ao acessar o game_id".to_string())?
+        .clone();
+    let game_code = state
+        .game_code
+        .lock()
+        .map_err(|_| "Falha ao acessar o game_code".to_string())?
+        .clone();
+    let game_started = state
+        .game_started
+        .lock()
+        .map_err(|_| "Falha ao acessar o game_started".to_string())?
+        .clone();
+    let commit_result =
+        commit_game_register(&pool, &mut game_started.clone(), game_code, game_id).await;
+    let mut game_started_guard = state
+        .game_started
+        .lock()
+        .map_err(|_| "Falha ao atualizar o game_started".to_string())?;
     *game_started_guard = true;
-    commit_register
+
+    commit_result
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

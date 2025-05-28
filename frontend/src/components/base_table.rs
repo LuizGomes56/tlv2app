@@ -27,7 +27,7 @@ pub struct MakeTableHeaderProps {
 }
 
 pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &str) -> Html {
-    let first_char = keyname.chars().next().unwrap();
+    let first_char = keyname.chars().next().unwrap_or_default();
     let remaining = &keyname[first_char.len_utf8()..];
     let is_attack_related = first_char == 'C' || first_char == 'A';
     let img_path = if instance_name == "abilities" {
@@ -99,14 +99,12 @@ pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
 #[derive(PartialEq, Properties)]
 pub struct MakeTableBodyProps {
     pub damages: DamageLike,
-    pub ordered_instances: Vec<String>,
 }
 
 #[function_component(MakeTableBody)]
 pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
     html! {
-        props.ordered_instances.iter().map(|key| {
-            let value = props.damages.get(key).unwrap();
+        props.damages.iter().map(|(_, value)| {
             let text = if value.maximum_damage > 0.0 {
                 format!("{:.0} - {:.0}", value.minimum_damage, value.maximum_damage)
             } else {
@@ -191,15 +189,12 @@ where
                                 {champion_td(&enemy_champion_id)}
                                 <MakeTableBody
                                     damages={damages.abilities.clone()}
-                                    ordered_instances={damaging_abilities.keys().cloned().collect::<Vec<String>>()}
                                 />
                                 <MakeTableBody
                                     damages={damages.items.clone()}
-                                    ordered_instances={damaging_items.keys().cloned().collect::<Vec<String>>()}
                                 />
                                 <MakeTableBody
                                     damages={damages.runes.clone()}
-                                    ordered_instances={damaging_runes.keys().cloned().collect::<Vec<String>>()}
                                 />
                             </tr>
                         }

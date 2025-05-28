@@ -58,15 +58,12 @@ pub fn comparison_table<T: CurrentPlayerLike + PartialEq, U: EnemyLike + Partial
                                     {champion_td(&enemy_champion_id)}
                                     <MakeTableBody
                                         damages={final_damage.abilities.damages.clone()}
-                                        ordered_instances={damaging_abilities.keys().cloned().collect::<Vec<String>>()}
                                     />
                                     <MakeTableBody
                                         damages={final_damage.items.damages.clone()}
-                                        ordered_instances={damaging_items.keys().cloned().collect::<Vec<String>>()}
                                     />
                                     <MakeTableBody
                                         damages={final_damage.runes.damages.clone()}
-                                        ordered_instances={damaging_runes.keys().cloned().collect::<Vec<String>>()}
                                     />
                                 </tr>
                             }

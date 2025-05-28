@@ -2,11 +2,14 @@ mod components;
 mod hooks;
 mod macros;
 mod model;
+mod pages;
 mod tauriapp;
 
 use std::rc::Rc;
 
-use components::{calculator::CalculatorDisplay, header::Header, realtime::RealtimeDisplay};
+use pages::{calculator::CalculatorDisplay, realtime::RealtimeDisplay};
+
+use components::header::Header;
 // use gloo::timers::callback::Interval;
 use model::{realtime::Realtime, realtime_example::makeup_example};
 // use tauriapp::invokers::get_realtime_game;

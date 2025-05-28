@@ -15,6 +15,7 @@ use crate::{
         comparison_table::ComparisonTable,
         selector::{SelectionMode, Selector},
         stacker::{StackDropper, StackInstance, StackSelector, Stacker},
+        value_cell::ValueCell,
     },
     model::{
         calculator::{ActivePlayerX, Calculator, CurrentPlayerX, EnemyPlayersX, EnemyX, GameX},
@@ -171,6 +172,7 @@ struct ServerResponse<T> {
 pub fn CalculatorDisplay() -> Html {
     let active_player = use_state(|| ActivePlayerX::new());
     let enemy_players = use_state(|| Vec::<EnemyPlayersX>::from([EnemyPlayersX::new(0)]));
+    let active_player_stacks = use_state(|| 0usize);
     let ally_earth_dragons = use_state(|| 0usize);
     let ally_fire_dragons = use_state(|| 0usize);
     let enemy_earth_dragons = use_state(|| 0usize);
@@ -354,7 +356,7 @@ pub fn CalculatorDisplay() -> Html {
                         })}
                     />
                 </div>
-                <section class="grid grid-cols-3 gap-2 py-2">
+                <section class="grid grid-cols-4 gap-2 py-2">
                     {
                         ["Q", "W", "E", "R"].into_iter().map(|ability| {
                             let image_url = format!(
@@ -380,74 +382,39 @@ pub fn CalculatorDisplay() -> Html {
                             }
                         }).collect::<Html>()
                     }
-                    {
-                        if true {
-                            let oninput = {
-                                let ally_earth_dragons = ally_earth_dragons.clone();
-                                Callback::from(move |e: InputEvent| {
-                                    let input: HtmlInputElement = e.target_unchecked_into();
-                                    ally_earth_dragons.set(input.value().parse().unwrap_or_default());
-                                })
-                            };
-
-                            let value = ally_earth_dragons.deref().clone();
-
-                            html! {
-                                <div class="grid grid-cols-[auto_1fr] gap-2">
-                                    <img
-                                        class="h-8 w-8 aspect-square"
-                                        src={format!("{}/other/EarthDragon.png", IMG_CDN)}
-                                        alt="Ability"
-                                    />
-                                    <input
-                                        oninput={oninput}
-                                        class="w-full bg-slate-800 h-8 text-center"
-                                        type="number"
-                                        value={value.to_string()}
-                                        min="0"
-                                        max="1"
-                                        aria-label="Ability"
-                                    />
-                                </div>
-                            }
-                        } else {
-                            html! {}
+                    <ValueCell
+                        image_source={"EarthDragon.png"}
+                        value={ally_earth_dragons.deref().clone().to_string()}
+                        oninput={
+                            let ally_earth_dragons = ally_earth_dragons.clone();
+                            Callback::from(move |e: InputEvent| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                ally_earth_dragons.set(input.value().parse().unwrap_or_default());
+                            })
                         }
-                    }
-                    {
-                        if true {
-                            let oninput = {
-                                let ally_fire_dragons = ally_fire_dragons.clone();
-                                Callback::from(move |e: InputEvent| {
-                                    let input: HtmlInputElement = e.target_unchecked_into();
-                                    ally_fire_dragons.set(input.value().parse().unwrap_or_default());
-                                })
-                            };
-
-                            let value = ally_fire_dragons.deref().clone();
-
-                            html! {
-                                <div class="grid grid-cols-[auto_1fr] gap-2">
-                                    <img
-                                        class="h-8 w-8 aspect-square"
-                                        src={format!("{}/other/FireDragon.png", IMG_CDN)}
-                                        alt="Ability"
-                                    />
-                                    <input
-                                        oninput={oninput}
-                                        class="w-full bg-slate-800 h-8 text-center"
-                                        type="number"
-                                        value={value.to_string()}
-                                        min="0"
-                                        max="1"
-                                        aria-label="Ability"
-                                    />
-                                </div>
-                            }
-                        } else {
-                            html! {}
-                        }
-                    }
+                    />
+                    <ValueCell
+                        image_source={"FireDragon.png"}
+                        oninput={{
+                            let ally_fire_dragons = ally_fire_dragons.clone();
+                            Callback::from(move |e: InputEvent| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                ally_fire_dragons.set(input.value().parse().unwrap_or_default());
+                            })
+                        }}
+                        value={ally_fire_dragons.deref().clone().to_string()}
+                    />
+                    <ValueCell
+                        image_source={"stack.svg"}
+                        oninput={{
+                            let active_player_stacks = active_player_stacks.clone();
+                            Callback::from(move |e: InputEvent| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                active_player_stacks.set(input.value().parse().unwrap_or_default());
+                            })
+                        }}
+                        value={active_player_stacks.deref().clone().to_string()}
+                    />
                 </section>
                 <div class="grid grid-cols-[auto_auto_1fr_auto_auto_1fr] items-center gap-2 pb-8">
                     {[
@@ -586,7 +553,7 @@ pub fn CalculatorDisplay() -> Html {
                 }
             }
             <div class="flex flex-col">
-                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 p-2 text-center text-slate-400 bg-slate-800">
+                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-slate-400 bg-slate-800">
                     <div
                         onclick={
                             let enemy_index = enemy_index.clone();
@@ -597,7 +564,7 @@ pub fn CalculatorDisplay() -> Html {
                                 }
                             })
                         }
-                        class="w-6 h-6 aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
+                        class="flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
                         { "<" }
                     </div>
                     {
@@ -666,7 +633,7 @@ pub fn CalculatorDisplay() -> Html {
                                 }
                             })
                         }
-                        class="w-6 h-6 aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
+                        class="flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
                         { ">" }
                     </div>
                 </div>

@@ -50,7 +50,7 @@ pub fn get_code(game_code: UseStateHandle<String>) {
                 if code_value.is_undefined() {
                     console::log_1(&JsValue::from_str("O aplicativo nativo não está em uso"));
                 } else {
-                    game_code.set(code_value.as_string().unwrap());
+                    game_code.set(code_value.as_string().unwrap_or_default());
                 }
             }
             Err(e) => {

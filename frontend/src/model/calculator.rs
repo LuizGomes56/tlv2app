@@ -81,7 +81,6 @@ pub struct EnemyPlayersX {
     pub items: Vec<usize>,
     pub level: usize,
     pub stats: BasicStats,
-    pub stacks: usize,
 }
 
 impl EnemyPlayersX {
@@ -98,7 +97,6 @@ impl EnemyPlayersX {
             items: Vec::from([4645, 3115, 3153]),
             level: 14,
             stats: BasicStats::default(),
-            stacks: 0,
         }
     }
 }

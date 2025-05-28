@@ -4,7 +4,7 @@ use crate::{
         base_table::BaseTable,
         comparison_header::ComparisonHeader,
         comparison_table::ComparisonTable,
-        stacker::{StackDropper, StackSelector, Stacker},
+        stacker::{StackDropper, StackInstance, StackSelector, Stacker},
     },
     model::{
         realtime::{CurrentPlayer, Enemy, Realtime, Scoreboard},
@@ -13,8 +13,6 @@ use crate::{
 };
 use std::rc::Rc;
 use yew::prelude::*;
-
-use super::stacker::StackInstance;
 
 #[derive(PartialEq, Properties)]
 pub struct RealtimeDisplayProps {
