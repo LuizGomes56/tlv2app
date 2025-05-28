@@ -6,10 +6,7 @@ use yew::prelude::*;
 use crate::{
     IMG_CDN,
     components::base_table::create_image,
-    model::{
-        realtime::{Enemy, InstanceDamage},
-        traits::EnemyLike,
-    },
+    model::{realtime::InstanceDamage, traits::EnemyLike},
 };
 
 #[derive(PartialEq, Properties)]
@@ -183,13 +180,17 @@ fn make_stack_event(
 pub struct StackSelectorProps {
     pub stack: UseStateHandle<Vec<StackInstance>>,
     pub champion_id: String,
-    pub abilities: HashMap<String, String>,
-    pub items: HashMap<String, String>,
-    pub runes: HashMap<String, String>,
+    pub instances: (
+        HashMap<String, String>,
+        HashMap<String, String>,
+        HashMap<String, String>,
+    ),
 }
 
 #[function_component(StackSelector)]
 pub fn stack_selector(props: &StackSelectorProps) -> Html {
+    let (abilities, items, runes) = props.instances.clone();
+
     html! {
         <div class="flex flex-col gap-4">
             <h2 class="text-shadow text-xl font-bold">
@@ -200,19 +201,19 @@ pub fn stack_selector(props: &StackSelectorProps) -> Html {
                     props.stack.clone(),
                     props.champion_id.clone(),
                     "abilities".to_string(),
-                    props.abilities.clone()
+                    abilities
                 )}
                 {make_stack_event(
                     props.stack.clone(),
                     props.champion_id.clone(),
                     "items".to_string(),
-                    props.items.clone()
+                    items
                 )}
                 {make_stack_event(
                     props.stack.clone(),
                     props.champion_id.clone(),
                     "runes".to_string(),
-                    props.runes.clone()
+                    runes
                 )}
             </div>
         </div>

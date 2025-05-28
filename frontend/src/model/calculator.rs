@@ -53,8 +53,7 @@ pub struct ActivePlayerX {
     pub items: Vec<usize>,
     pub runes: Vec<usize>,
     pub level: usize,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stacks: Option<usize>,
+    pub stacks: usize,
 }
 
 impl ActivePlayerX {
@@ -71,7 +70,7 @@ impl ActivePlayerX {
             items: Vec::from([4645, 3115, 3153]),
             runes: Vec::new(),
             level: 18,
-            stacks: None,
+            stacks: 0,
         }
     }
 }
@@ -81,20 +80,25 @@ pub struct EnemyPlayersX {
     pub champion_id: String,
     pub items: Vec<usize>,
     pub level: usize,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stats: Option<BasicStats>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stacks: Option<usize>,
+    pub stats: BasicStats,
+    pub stacks: usize,
 }
 
 impl EnemyPlayersX {
-    pub fn new() -> EnemyPlayersX {
+    pub fn new(index: usize) -> EnemyPlayersX {
+        let champion_id = match index {
+            0 => String::from("Gwen"),
+            1 => String::from("Nasus"),
+            2 => String::from("Gnar"),
+            3 => String::from("Kayn"),
+            _ => String::from("Caitlyn"),
+        };
         EnemyPlayersX {
-            champion_id: String::from("Gwen"),
+            champion_id,
             items: Vec::from([4645, 3115, 3153]),
             level: 14,
-            stats: None,
-            stacks: None,
+            stats: BasicStats::default(),
+            stacks: 0,
         }
     }
 }

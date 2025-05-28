@@ -52,22 +52,26 @@ pub fn comparison_table<T: CurrentPlayerLike + PartialEq, U: EnemyLike + Partial
                         let enemy_champion_id=  enemy.get_champion_id();
                         let damages = enemy.get_damages();
 
-                        html! {
-                            <tr>
-                                {champion_td(&enemy_champion_id)}
-                                <MakeTableBody
-                                    damages={damages.compared_items.get(&props.item_id).unwrap().abilities.damages.clone()}
-                                    ordered_instances={damaging_abilities.keys().cloned().collect::<Vec<String>>()}
-                                />
-                                <MakeTableBody
-                                    damages={damages.compared_items.get(&props.item_id).unwrap().items.damages.clone()}
-                                    ordered_instances={damaging_items.keys().cloned().collect::<Vec<String>>()}
-                                />
-                                <MakeTableBody
-                                    damages={damages.compared_items.get(&props.item_id).unwrap().runes.damages.clone()}
-                                    ordered_instances={damaging_runes.keys().cloned().collect::<Vec<String>>()}
-                                />
-                            </tr>
+                        if let Some(final_damage) = damages.compared_items.get(&props.item_id) {
+                            html! {
+                                <tr>
+                                    {champion_td(&enemy_champion_id)}
+                                    <MakeTableBody
+                                        damages={final_damage.abilities.damages.clone()}
+                                        ordered_instances={damaging_abilities.keys().cloned().collect::<Vec<String>>()}
+                                    />
+                                    <MakeTableBody
+                                        damages={final_damage.items.damages.clone()}
+                                        ordered_instances={damaging_items.keys().cloned().collect::<Vec<String>>()}
+                                    />
+                                    <MakeTableBody
+                                        damages={final_damage.runes.damages.clone()}
+                                        ordered_instances={damaging_runes.keys().cloned().collect::<Vec<String>>()}
+                                    />
+                                </tr>
+                            }
+                        } else {
+                            html! {}
                         }
                     }).collect::<Html>()
                 }

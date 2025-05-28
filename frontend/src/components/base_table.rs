@@ -1,7 +1,7 @@
 use crate::{
     IMG_CDN,
     model::{
-        realtime::{CurrentPlayer, DamageLike, Enemy},
+        realtime::DamageLike,
         traits::{CurrentPlayerLike, EnemyLike},
     },
 };
