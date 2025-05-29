@@ -25,8 +25,23 @@ where
 #[function_component(Selector)]
 pub fn selector<T>(props: &SelectorProps<T>) -> Html
 where
-    T: Eq + Hash + Display + Clone + PartialEq + 'static,
+    T: Eq + Hash + Display + Clone + PartialEq + 'static + Ord,
 {
+    let source_map = props.source_map.clone();
+    let mut tuples = source_map
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect::<Vec<_>>();
+
+    match &props.selection {
+        SelectionMode::Single(_) => {
+            tuples.sort_by(|a, b| a.0.cmp(&b.0));
+        }
+        SelectionMode::Multiple(_) => {
+            tuples.sort_by(|a, b| a.1.cmp(&b.1));
+        }
+    }
+
     let selected_vec = use_state(|| Vec::<T>::new());
     let dropdown_ref = use_node_ref();
     let is_open = use_state(|| false);
@@ -63,7 +78,7 @@ where
                 )}
             >
                 {
-                    props.source_map.iter().map(|(key, value)| {
+                    tuples.into_iter().map(|(key, value)| {
                         let key = key.clone();
                         let img_src = format!("{}/{}.png", props.uri, key);
 

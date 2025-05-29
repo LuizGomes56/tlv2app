@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 mod components;
 mod hooks;
 mod macros;
@@ -77,7 +80,7 @@ fn app() -> Html {
             // <button onclick={stop_game}>{ "Stop Game" }</button>
             {
                 if game_data.is_some() {
-                    if let Some(data) = game_data.as_ref() {
+                    if let Some(_data) = game_data.as_ref() {
                         html! {
                             <CalculatorDisplay />
                             // <RealtimeDisplay game_data={data} game_code={(*game_code).clone()} />

@@ -74,10 +74,12 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
 
 #[function_component(MakeTableHeader)]
 pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
+    let mut sorted_map = props.map.iter().collect::<Vec<_>>();
+    sorted_map.sort_by(|a, b| a.0.cmp(&b.0));
     html! {
         <>
             {
-                props.map.iter().map(|(key, _)| {
+                sorted_map.into_iter().map(|(key, _)| {
                     html! {
                         <th>
                             <div>
@@ -103,8 +105,10 @@ pub struct MakeTableBodyProps {
 
 #[function_component(MakeTableBody)]
 pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
+    let mut sorted_damages = props.damages.iter().collect::<Vec<_>>();
+    sorted_damages.sort_by(|a, b| a.0.cmp(&b.0));
     html! {
-        props.damages.iter().map(|(_, value)| {
+        sorted_damages.into_iter().map(|(_, value)| {
             let text = if value.maximum_damage > 0.0 {
                 format!("{:.0} - {:.0}", value.minimum_damage, value.maximum_damage)
             } else {

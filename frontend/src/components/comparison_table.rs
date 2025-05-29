@@ -49,7 +49,7 @@ pub fn comparison_table<T: CurrentPlayerLike + PartialEq, U: EnemyLike + Partial
             <tbody>
                 {
                     props.enemies.iter().map(|enemy| {
-                        let enemy_champion_id=  enemy.get_champion_id();
+                        let enemy_champion_id = enemy.get_champion_id();
                         let damages = enemy.get_damages();
 
                         if let Some(final_damage) = damages.compared_items.get(&props.item_id) {

@@ -137,10 +137,12 @@ fn make_stack_event(
     source: String,
     map: HashMap<String, String>,
 ) -> Html {
+    let mut sorted_map = map.into_iter().collect::<Vec<_>>();
+    sorted_map.sort_by(|a, b| a.0.cmp(&b.0));
     html! {
         <>
             {
-                map.iter().map(|(keyname, _)| {
+                sorted_map.iter().map(|(keyname, _)| {
                     let onclick = {
                         let stack = stack.clone();
                         let keyname = keyname.clone();

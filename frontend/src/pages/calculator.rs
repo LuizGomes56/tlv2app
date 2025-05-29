@@ -298,7 +298,7 @@ pub fn CalculatorDisplay() -> Html {
     }
 
     html! {
-        <div class="grid grid-cols-[auto_1fr_auto] gap-4 p-4 justify-center">
+        <div class="flex flex-wrap gap-4 p-4 justify-center">
             <div class="flex flex-col">
                 <div class="flex relative">
                     <img
@@ -459,7 +459,7 @@ pub fn CalculatorDisplay() -> Html {
                             format!("{}/stats/Health.png", IMG_CDN)
                         ),
                         (
-                            StatsValue::CurrentHealth(active_player.champion_stats.max_health.to_string()),
+                            StatsValue::CurrentHealth(active_player.champion_stats.current_health.to_string()),
                             format!("{}/stats/Health.png", IMG_CDN)
                         ),
                         (
@@ -499,7 +499,7 @@ pub fn CalculatorDisplay() -> Html {
                     let enemies = calculator_data.enemies.clone();
 
                     html! {
-                        <div class="flex flex-col gap-4 w-full">
+                        <div class="flex flex-col gap-4 flex-1">
                             <div class="overflow-auto">
                                 <BaseTable<CurrentPlayerX, EnemyX>
                                     current_player={current_player.clone()}
