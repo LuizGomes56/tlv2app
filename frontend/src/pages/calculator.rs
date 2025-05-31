@@ -19,6 +19,7 @@ use crate::{
     },
     model::{
         calculator::{ActivePlayerX, Calculator, CurrentPlayerX, EnemyPlayersX, EnemyX, GameX},
+        server::ServerResponse,
         traits::CurrentPlayerLike,
     },
 };
@@ -161,11 +162,6 @@ impl StatsValue {
             StatsValue::CurrentMana(v) => ("Current Mana", v.clone()),
         }
     }
-}
-
-#[derive(Deserialize)]
-struct ServerResponse<T> {
-    data: T,
 }
 
 #[function_component]
@@ -499,7 +495,7 @@ pub fn CalculatorDisplay() -> Html {
                     let enemies = calculator_data.enemies.clone();
 
                     html! {
-                        <div class="flex flex-col gap-4 flex-1">
+                        <div class="flex flex-col gap-4 flex-1 max-w-full">
                             <div class="overflow-auto">
                                 <BaseTable<CurrentPlayerX, EnemyX>
                                     current_player={current_player.clone()}
