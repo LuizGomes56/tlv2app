@@ -1,70 +1,60 @@
 use crate::{
-    components::base_table::{MakeTableBody, MakeTableHeader, champion_td},
+    components::base_table::{champion_td, make_table_body, make_table_header},
     model::traits::{CurrentPlayerLike, EnemyLike},
 };
 
 use yew::prelude::*;
 
-#[derive(PartialEq, Properties)]
-pub struct BaseTableProps<T, U>
+pub fn comparison_table<T, U>(current_player: &T, enemies: &Vec<U>, item_id: String) -> Html
 where
-    T: CurrentPlayerLike + PartialEq,
-    U: EnemyLike + PartialEq,
+    T: CurrentPlayerLike,
+    U: EnemyLike,
 {
-    pub current_player: T,
-    pub enemies: Vec<U>,
-    pub item_id: String,
-}
-
-#[function_component(ComparisonTable)]
-pub fn comparison_table<T: CurrentPlayerLike + PartialEq, U: EnemyLike + PartialEq>(
-    props: &BaseTableProps<T, U>,
-) -> Html {
-    let champion_id = props.current_player.get_champion_id();
+    let champion_id = current_player.get_champion_id();
     let (damaging_abilities, damaging_items, damaging_runes) =
-        props.current_player.get_damaging_instances();
+        current_player.get_damaging_instances();
 
     html! {
         <table class="w-full">
             <thead>
                 <tr>
                     <th></th>
-                    <MakeTableHeader
-                        champion_id={champion_id.clone()}
-                        map={damaging_abilities.clone()}
-                        instance_name={"abilities"}
-                    />
-                    <MakeTableHeader
-                        champion_id={Option::<String>::None}
-                        map={damaging_items.clone()}
-                        instance_name={"items"}
-                    />
-                    <MakeTableHeader
-                        champion_id={Option::<String>::None}
-                        map={damaging_runes.clone()}
-                        instance_name={"runes"}
-                    />
+                    {
+                        make_table_header(
+                            Some(champion_id),
+                            damaging_abilities,
+                            "abilities"
+                        )
+                    }
+                    {
+                        make_table_header(
+                            Option::<String>::None,
+                            damaging_items,
+                            "items"
+                        )
+                    }
+                    {
+                        make_table_header(
+                            Option::<String>::None,
+                            damaging_runes,
+                            "runes"
+                        )
+                    }
                 </tr>
             </thead>
             <tbody>
                 {
-                    props.enemies.iter().map(|enemy| {
+                    enemies.iter().map(|enemy| {
                         let enemy_champion_id = enemy.get_champion_id();
                         let damages = enemy.get_damages();
 
-                        if let Some(final_damage) = damages.compared_items.get(&props.item_id) {
+                        if let Some(final_damage) = damages.compared_items.get(&item_id) {
                             html! {
                                 <tr>
                                     {champion_td(&enemy_champion_id)}
-                                    <MakeTableBody
-                                        damages={final_damage.abilities.damages.clone()}
-                                    />
-                                    <MakeTableBody
-                                        damages={final_damage.items.damages.clone()}
-                                    />
-                                    <MakeTableBody
-                                        damages={final_damage.runes.damages.clone()}
-                                    />
+                                    { make_table_body(&final_damage.abilities.damages) }
+                                    { make_table_body(&final_damage.items.damages) }
+                                    { make_table_body(&final_damage.runes.damages) }
                                 </tr>
                             }
                         } else {

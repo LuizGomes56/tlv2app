@@ -19,13 +19,6 @@ pub fn champion_td(champion_id: &str) -> Html {
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct MakeTableHeaderProps {
-    pub map: HashMap<String, String>,
-    pub champion_id: Option<String>,
-    pub instance_name: String,
-}
-
 pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &str) -> Html {
     let first_char = keyname.chars().next().unwrap_or_default();
     let remaining = &keyname[first_char.len_utf8()..];
@@ -72,9 +65,12 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
     }
 }
 
-#[function_component(MakeTableHeader)]
-pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
-    let mut sorted_map = props.map.iter().collect::<Vec<_>>();
+pub fn make_table_header(
+    champion_id: Option<String>,
+    map: HashMap<String, String>,
+    instance_name: &str,
+) -> Html {
+    let mut sorted_map = map.iter().collect::<Vec<_>>();
     sorted_map.sort_by(|a, b| a.0.cmp(&b.0));
     html! {
         <>
@@ -83,11 +79,13 @@ pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
                     html! {
                         <th>
                             <div>
-                                {create_image(
-                                    key,
-                                    props.champion_id.clone(),
-                                    &props.instance_name
-                                )}
+                                {
+                                    create_image(
+                                        key,
+                                        champion_id.clone(),
+                                        &instance_name
+                                    )
+                                }
                             </div>
                         </th>
                     }
@@ -98,14 +96,8 @@ pub fn make_table_header(props: &MakeTableHeaderProps) -> Html {
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct MakeTableBodyProps {
-    pub damages: DamageLike,
-}
-
-#[function_component(MakeTableBody)]
-pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
-    let mut sorted_damages = props.damages.iter().collect::<Vec<_>>();
+pub fn make_table_body(damages: &DamageLike) -> Html {
+    let mut sorted_damages = damages.iter().collect::<Vec<_>>();
     sorted_damages.sort_by(|a, b| a.0.cmp(&b.0));
     html! {
         sorted_damages.into_iter().map(|(_, value)| {
@@ -142,64 +134,53 @@ pub fn make_table_body(props: &MakeTableBodyProps) -> Html {
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct BaseTableProps<T, U>
+pub fn base_table<T, U>(current_player: &T, enemies: &Vec<U>) -> Html
 where
-    T: CurrentPlayerLike + PartialEq,
-    U: EnemyLike + PartialEq,
-{
-    pub current_player: T,
-    pub enemies: Vec<U>,
-}
-
-#[function_component(BaseTable)]
-pub fn base_table<T, U>(props: &BaseTableProps<T, U>) -> Html
-where
-    T: CurrentPlayerLike + PartialEq,
-    U: EnemyLike + PartialEq,
+    T: CurrentPlayerLike,
+    U: EnemyLike,
 {
     let (damaging_abilities, damaging_items, damaging_runes) =
-        props.current_player.get_damaging_instances();
-    let champion_id = props.current_player.get_champion_id();
+        current_player.get_damaging_instances();
+    let champion_id = current_player.get_champion_id();
     html! {
         <table class="w-full">
             <thead>
                 <tr>
                     <th></th>
-                    <MakeTableHeader
-                        champion_id={champion_id.clone()}
-                        map={damaging_abilities.clone()}
-                        instance_name={"abilities"}
-                    />
-                    <MakeTableHeader
-                        champion_id={Option::<String>::None}
-                        map={damaging_items.clone()}
-                        instance_name={"items"}
-                    />
-                    <MakeTableHeader
-                        champion_id={Option::<String>::None}
-                        map={damaging_runes.clone()}
-                        instance_name={"runes"}
-                    />
+                    {
+                        make_table_header(
+                            Some(champion_id),
+                            damaging_abilities,
+                            "abilities"
+                        )
+                    }
+                    {
+                        make_table_header(
+                            Option::<String>::None,
+                            damaging_items,
+                            "items"
+                        )
+                    }
+                    {
+                        make_table_header(
+                            Option::<String>::None,
+                            damaging_runes,
+                            "runes"
+                        )
+                    }
                 </tr>
             </thead>
             <tbody>
                 {
-                    props.enemies.iter().map(|enemy| {
+                    enemies.iter().map(|enemy| {
                         let damages = enemy.get_damages();
                         let enemy_champion_id = enemy.get_champion_id();
                         html! {
                             <tr>
                                 {champion_td(&enemy_champion_id)}
-                                <MakeTableBody
-                                    damages={damages.abilities.clone()}
-                                />
-                                <MakeTableBody
-                                    damages={damages.items.clone()}
-                                />
-                                <MakeTableBody
-                                    damages={damages.runes.clone()}
-                                />
+                                { make_table_body(&damages.abilities) }
+                                { make_table_body(&damages.items) }
+                                { make_table_body(&damages.runes) }
                             </tr>
                         }
                     }).collect::<Html>()

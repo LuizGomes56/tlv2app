@@ -1,10 +1,10 @@
 use crate::{
     IMG_CDN,
     components::{
-        base_table::BaseTable,
-        comparison_header::ComparisonHeader,
-        comparison_table::ComparisonTable,
-        stacker::{StackDropper, StackInstance, StackSelector, Stacker},
+        base_table::base_table,
+        comparison_header::comparison_header,
+        comparison_table::comparison_table,
+        stacker::{StackInstance, stack_dropper, stack_selector, stacker},
     },
     model::{
         realtime::{CurrentPlayer, Enemy, Realtime, Scoreboard},
@@ -142,26 +142,32 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
             </div>
             <div class="flex flex-col gap-4 flex-1">
                 <div class="shadow-container bg-slate-900">
-                    <BaseTable<CurrentPlayer, Enemy>
-                        current_player={current_player.clone()}
-                        enemies={enemies.clone()}
-                    />
+                    {
+                        base_table(
+                            current_player,
+                            enemies,
+                        )
+                    }
                 </div>
                 {
                     props.game_data.compared_items.iter().map(|(item_id, value)| {
                         html! {
                             <div class="shadow-container bg-slate-900">
                                 <div class="flex flex-col">
-                                    <ComparisonHeader
-                                        value={value.clone()}
-                                        item_id={item_id.clone()}
-                                    />
+                                    {
+                                        comparison_header(
+                                            value,
+                                            item_id,
+                                        )
+                                    }
                                     <div class="overflow-auto">
-                                        <ComparisonTable<CurrentPlayer, Enemy>
-                                            current_player={current_player.clone()}
-                                            enemies={enemies.clone()}
-                                            item_id={item_id.clone()}
-                                        />
+                                        {
+                                            comparison_table(
+                                                current_player,
+                                                enemies,
+                                                item_id.clone(),
+                                            )
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -170,21 +176,27 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                 }
                 <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-slate-900">
                     <div class="flex flex-col gap-4">
-                        <StackSelector
-                            stack={stack.clone()}
-                            champion_id={current_player.champion_id.clone()}
-                            instances={current_player.get_damaging_instances()}
-                        />
-                        <StackDropper
-                            champion_id={current_player.champion_id.clone()}
-                            stack={stack.clone()}
-                        />
+                        {
+                            stack_selector(
+                                &stack,
+                                current_player.champion_id.clone(),
+                                current_player.get_damaging_instances(),
+                            )
+                        }
+                        {
+                            stack_dropper(
+                                &stack,
+                                Some(current_player.champion_id.clone()),
+                            )
+                        }
                     </div>
                     <div class="overflow-auto">
-                        <Stacker<Enemy>
-                            stack={(*stack).clone()}
-                            enemies={enemies.clone()}
-                        />
+                        {
+                            stacker(
+                                &stack,
+                                &enemies,
+                            )
+                        }
                     </div>
                 </div>
             </div>

@@ -12,7 +12,9 @@ mod tauriapp;
 
 use std::rc::Rc;
 
-use pages::{calculator::CalculatorDisplay, formulas::Formulas, realtime::RealtimeDisplay};
+use pages::{
+    about::about, calculator::CalculatorDisplay, formulas::Formulas, realtime::RealtimeDisplay,
+};
 
 use components::sidebar::Sidebar;
 use model::{realtime::Realtime, realtime_example::makeup_example};
@@ -25,7 +27,8 @@ fn app() -> Html {
     html! {
         <div class="flex">
             <Sidebar />
-            <Formulas />
+            // { about() }
+            <CalculatorDisplay />
         </div>
     }
 }

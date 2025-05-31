@@ -10,12 +10,12 @@ use yew::prelude::*;
 use crate::{
     IMG_CDN, apply_stat,
     components::{
-        base_table::BaseTable,
-        comparison_header::ComparisonHeader,
-        comparison_table::ComparisonTable,
+        base_table::base_table,
+        comparison_header::comparison_header,
+        comparison_table::comparison_table,
         selector::{SelectionMode, Selector},
-        stacker::{StackDropper, StackInstance, StackSelector, Stacker},
-        value_cell::ValueCell,
+        stacker::{StackInstance, stack_dropper, stack_selector, stacker},
+        value_cell::value_cell,
     },
     model::{
         calculator::{ActivePlayerX, Calculator, CurrentPlayerX, EnemyPlayersX, EnemyX, GameX},
@@ -24,20 +24,14 @@ use crate::{
     },
 };
 
-#[derive(PartialEq, Properties)]
-pub struct AbilityLevelSelectorProps {
-    pub state_handler: UseStateHandle<ActivePlayerX>,
-    pub keyname: &'static str,
-    pub image_url: String,
-    pub value: usize,
-}
-
-#[function_component]
-fn AbilityLevelSelector(props: &AbilityLevelSelectorProps) -> Html {
-    let keyname = props.keyname;
-    let value = props.value;
+fn ability_level_selector(
+    state_handler: &UseStateHandle<ActivePlayerX>,
+    keyname: &'static str,
+    image_url: String,
+    value: usize,
+) -> Html {
     let oninput = {
-        let state_handler = props.state_handler.clone();
+        let state_handler = state_handler.clone();
         Callback::from(move |e: InputEvent| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let mut current_state = (*state_handler).clone();
@@ -59,7 +53,7 @@ fn AbilityLevelSelector(props: &AbilityLevelSelectorProps) -> Html {
             <div class="relative flex items-center justify-center">
                 <img
                     class="h-8 w-8 aspect-square"
-                    src={props.image_url.clone()}
+                    src={image_url}
                     alt="Ability"
                 />
                 <span class="img-letter">{keyname}</span>
@@ -77,26 +71,21 @@ fn AbilityLevelSelector(props: &AbilityLevelSelectorProps) -> Html {
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct StatSelectorProps {
-    pub image_url: String,
-    pub label_enum: StatsValue,
-    pub state_handler: UseStateHandle<ActivePlayerX>,
-}
-
-#[function_component]
-fn StatSelector(props: &StatSelectorProps) -> Html {
-    let cloned_enum = props.label_enum.clone();
-    let (name, value) = props.label_enum.get_labels();
+fn stat_selector(
+    image_url: String,
+    label_enum: StatsValue,
+    state_handler: &UseStateHandle<ActivePlayerX>,
+) -> Html {
+    let (name, value) = label_enum.get_labels();
 
     let oninput = {
-        let state_handler = props.state_handler.clone();
+        let state_handler = state_handler.clone();
 
         Callback::from(move |e: InputEvent| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let mut current_state = (*state_handler).clone();
             if let Some(input_value) = input.value().parse::<f64>().ok() {
-                apply_stat!(current_state, cloned_enum, input_value);
+                apply_stat!(current_state, label_enum, input_value);
             }
             state_handler.set(current_state);
         })
@@ -113,7 +102,7 @@ fn StatSelector(props: &StatSelectorProps) -> Html {
             />
             <img
                 class="h-4 w-4 aspect-square"
-                src={props.image_url.clone()}
+                src={image_url.clone()}
                 alt="Ability"
             />
             <span class="text-sm text-shadow">{name}</span>
@@ -363,54 +352,60 @@ pub fn CalculatorDisplay() -> Html {
                             );
 
                             html! {
-                                <AbilityLevelSelector
-                                    image_url={image_url}
-                                    state_handler={active_player.clone()}
-                                    keyname={ability}
-                                    value={match ability {
+                                ability_level_selector(
+                                    &active_player,
+                                    ability,
+                                    image_url,
+                                    match ability {
                                         "Q" => active_player.abilities.q,
                                         "W" => active_player.abilities.w,
                                         "E" => active_player.abilities.e,
                                         "R" => active_player.abilities.r,
                                         _ => 0
-                                    }}
-                                />
+                                    }
+                                )
                             }
                         }).collect::<Html>()
                     }
-                    <ValueCell
-                        image_source={"EarthDragon.png"}
-                        value={ally_earth_dragons.deref().clone().to_string()}
-                        oninput={
-                            let ally_earth_dragons = ally_earth_dragons.clone();
-                            Callback::from(move |e: InputEvent| {
-                                let input: HtmlInputElement = e.target_unchecked_into();
-                                ally_earth_dragons.set(input.value().parse().unwrap_or_default());
-                            })
-                        }
-                    />
-                    <ValueCell
-                        image_source={"FireDragon.png"}
-                        oninput={{
-                            let ally_fire_dragons = ally_fire_dragons.clone();
-                            Callback::from(move |e: InputEvent| {
-                                let input: HtmlInputElement = e.target_unchecked_into();
-                                ally_fire_dragons.set(input.value().parse().unwrap_or_default());
-                            })
-                        }}
-                        value={ally_fire_dragons.deref().clone().to_string()}
-                    />
-                    <ValueCell
-                        image_source={"stack.svg"}
-                        oninput={{
-                            let active_player_stacks = active_player_stacks.clone();
-                            Callback::from(move |e: InputEvent| {
-                                let input: HtmlInputElement = e.target_unchecked_into();
-                                active_player_stacks.set(input.value().parse().unwrap_or_default());
-                            })
-                        }}
-                        value={active_player_stacks.deref().clone().to_string()}
-                    />
+                    {
+                        value_cell(
+                            "EarthDragon.png",
+                            ally_earth_dragons.deref().clone().to_string(),
+                            {
+                                let ally_earth_dragons = ally_earth_dragons.clone();
+                                Callback::from(move |e: InputEvent| {
+                                    let input: HtmlInputElement = e.target_unchecked_into();
+                                    ally_earth_dragons.set(input.value().parse().unwrap_or_default());
+                                })
+                            },
+                        )
+                    }
+                    {
+                        value_cell(
+                            "FireDragon.png",
+                            ally_fire_dragons.deref().clone().to_string(),
+                            {
+                                let ally_fire_dragons = ally_fire_dragons.clone();
+                                Callback::from(move |e: InputEvent| {
+                                    let input: HtmlInputElement = e.target_unchecked_into();
+                                    ally_fire_dragons.set(input.value().parse().unwrap_or_default());
+                                })
+                            },
+                        )
+                    }
+                    {
+                        value_cell(
+                            "stack.svg",
+                            active_player_stacks.deref().clone().to_string(),
+                            {
+                                let active_player_stacks = active_player_stacks.clone();
+                                Callback::from(move |e: InputEvent| {
+                                    let input: HtmlInputElement = e.target_unchecked_into();
+                                    active_player_stacks.set(input.value().parse().unwrap_or_default());
+                                })
+                            },
+                        )
+                    }
                 </section>
                 <div class="grid grid-cols-[auto_auto_1fr_auto_auto_1fr] items-center gap-2 pb-8">
                     {[
@@ -480,11 +475,11 @@ pub fn CalculatorDisplay() -> Html {
                         ),
                     ].into_iter().map(|(label_enum, image_url)| {
                         html! {
-                            <StatSelector
-                                image_url={image_url}
-                                label_enum={label_enum}
-                                state_handler={active_player.clone()}
-                            />
+                            stat_selector(
+                                image_url,
+                                label_enum,
+                                &active_player
+                            )
                         }
                     }).collect::<Html>()}
                 </div>
@@ -497,26 +492,27 @@ pub fn CalculatorDisplay() -> Html {
                     html! {
                         <div class="flex flex-col gap-4 flex-1 max-w-full">
                             <div class="overflow-auto">
-                                <BaseTable<CurrentPlayerX, EnemyX>
-                                    current_player={current_player.clone()}
-                                    enemies={enemies.clone()}
-                                />
+                                { base_table(&current_player, &enemies) }
                             </div>
                             {
                                 calculator_data.compared_items.iter().map(|(item_id, value)| {
                                     html! {
                                         <div class="shadow-container bg-slate-900">
                                             <div class="flex flex-col">
-                                                <ComparisonHeader
-                                                    value={value.clone()}
-                                                    item_id={item_id.to_string().clone()}
-                                                />
+                                                {
+                                                    comparison_header(
+                                                        value,
+                                                        &item_id.to_string()
+                                                    )
+                                                }
                                                 <div class="overflow-auto">
-                                                    <ComparisonTable<CurrentPlayerX, EnemyX>
-                                                        current_player={current_player.clone()}
-                                                        enemies={enemies.clone()}
-                                                        item_id={calculator_data.best_item.clone().to_string()}
-                                                    />
+                                                    {
+                                                        comparison_table(
+                                                            &current_player,
+                                                            &enemies,
+                                                            calculator_data.best_item.to_string(),
+                                                        )
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -525,21 +521,27 @@ pub fn CalculatorDisplay() -> Html {
                             }
                             <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-slate-900">
                                 <div class="flex flex-col gap-4">
-                                    <StackSelector
-                                        stack={stack.clone()}
-                                        champion_id={current_player.champion_id.clone()}
-                                        instances={current_player.get_damaging_instances()}
-                                    />
-                                    <StackDropper
-                                        champion_id={current_player.champion_id.clone()}
-                                        stack={stack.clone()}
-                                    />
+                                    {
+                                        stack_selector(
+                                            &stack,
+                                            current_player.champion_id.clone(),
+                                            current_player.get_damaging_instances(),
+                                        )
+                                    }
+                                    {
+                                        stack_dropper(
+                                            &stack,
+                                            Some(current_player.champion_id),
+                                        )
+                                    }
                                 </div>
                                 <div class="overflow-auto">
-                                    <Stacker<EnemyX>
-                                        stack={(*stack).clone()}
-                                        enemies={enemies.clone()}
-                                    />
+                                    {
+                                        stacker(
+                                            &stack,
+                                            &enemies
+                                        )
+                                    }
                                 </div>
                             </div>
                         </div>

@@ -9,16 +9,8 @@ use crate::{
     model::{realtime::InstanceDamage, traits::EnemyLike},
 };
 
-#[derive(PartialEq, Properties)]
-pub struct MakeStackerHeaderProps {
-    pub urls: Vec<String>,
-}
-
-#[function_component(MakeStackerHeader)]
-pub fn make_stacker_header(props: &MakeStackerHeaderProps) -> Html {
-    props
-        .urls
-        .iter()
+pub fn make_stacker_header(urls: Vec<String>) -> Html {
+    urls.iter()
         .map(|url| {
             html! {
                 <th>
@@ -40,17 +32,7 @@ pub struct StackInstance {
     pub is_maximum: bool,
 }
 
-#[derive(PartialEq, Properties)]
-pub struct StackerProps<T>
-where
-    T: EnemyLike + PartialEq,
-{
-    pub stack: Vec<StackInstance>,
-    pub enemies: Vec<T>,
-}
-
-#[function_component(Stacker)]
-pub fn stacker<T: EnemyLike + PartialEq>(props: &StackerProps<T>) -> Html {
+pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Html {
     html! {
         <table>
             <thead>
@@ -58,22 +40,24 @@ pub fn stacker<T: EnemyLike + PartialEq>(props: &StackerProps<T>) -> Html {
                     <th>
                         <span>{ "Name" }</span>
                     </th>
-                    <MakeStackerHeader urls={vec![
-                        format!("{}/other/sigma.svg", IMG_CDN),
-                        format!("{}/other/heart.svg", IMG_CDN),
-                        format!("{}/other/percent.svg", IMG_CDN)
-                    ]} />
+                    {
+                        make_stacker_header(vec![
+                            format!("{}/other/sigma.svg", IMG_CDN),
+                            format!("{}/other/heart.svg", IMG_CDN),
+                            format!("{}/other/percent.svg", IMG_CDN)
+                        ])
+                    }
                 </tr>
             </thead>
             <tbody>
-                {props.enemies.iter().map(|enemy| {
+                {enemies.iter().map(|enemy| {
                     let mut total_damage = 0f64;
                     let damages = enemy.get_damages();
                     let current_stats = enemy.get_current_stats();
                     let enemy_champion_id = enemy.get_champion_id();
                     let enemy_champion_name = enemy.get_champion_name();
 
-                    for instance_value in props.stack.iter() {
+                    for instance_value in stack.iter() {
                         let mut accumulator = |damagelike: &Option<&InstanceDamage>| {
                             if let Some(instance_damage) = damagelike {
                                 if instance_value.is_maximum {
@@ -132,8 +116,8 @@ pub fn stacker<T: EnemyLike + PartialEq>(props: &StackerProps<T>) -> Html {
 }
 
 fn make_stack_event(
-    stack: UseStateHandle<Vec<StackInstance>>,
-    champion_id: String,
+    stack: &UseStateHandle<Vec<StackInstance>>,
+    champion_id: &str,
     source: String,
     map: HashMap<String, String>,
 ) -> Html {
@@ -155,7 +139,7 @@ fn make_stack_event(
                                     StackInstance {
                                         id: Uuid::new_v4().to_string(),
                                         keyname: keyname.clone(),
-                                        source: source.clone(),
+                                        source: source.clone().to_string(),
                                         is_maximum: false,
                                     },
                                 );
@@ -167,7 +151,7 @@ fn make_stack_event(
                         <button {onclick} class="cursor-pointer text-white relative w-8 h-8 flex items-center justify-center">
                             {create_image(
                                 keyname,
-                                Some(champion_id.clone()),
+                                Some(champion_id.to_string()),
                                 &source
                             )}
                         </button>
@@ -178,20 +162,16 @@ fn make_stack_event(
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct StackSelectorProps {
-    pub stack: UseStateHandle<Vec<StackInstance>>,
-    pub champion_id: String,
-    pub instances: (
+pub fn stack_selector(
+    stack: &UseStateHandle<Vec<StackInstance>>,
+    champion_id: String,
+    instances: (
         HashMap<String, String>,
         HashMap<String, String>,
         HashMap<String, String>,
     ),
-}
-
-#[function_component(StackSelector)]
-pub fn stack_selector(props: &StackSelectorProps) -> Html {
-    let (abilities, items, runes) = props.instances.clone();
+) -> Html {
+    let (abilities, items, runes) = instances;
 
     html! {
         <div class="flex flex-col gap-4">
@@ -200,20 +180,20 @@ pub fn stack_selector(props: &StackSelectorProps) -> Html {
             </h2>
             <div class="flex flex-wrap gap-2">
                 {make_stack_event(
-                    props.stack.clone(),
-                    props.champion_id.clone(),
+                    &stack,
+                    &champion_id,
                     "abilities".to_string(),
                     abilities
                 )}
                 {make_stack_event(
-                    props.stack.clone(),
-                    props.champion_id.clone(),
+                    &stack,
+                    &champion_id,
                     "items".to_string(),
                     items
                 )}
                 {make_stack_event(
-                    props.stack.clone(),
-                    props.champion_id.clone(),
+                    &stack,
+                    &champion_id,
                     "runes".to_string(),
                     runes
                 )}
@@ -222,15 +202,11 @@ pub fn stack_selector(props: &StackSelectorProps) -> Html {
     }
 }
 
-#[derive(PartialEq, Properties)]
-pub struct StackDropperProps {
-    pub stack: UseStateHandle<Vec<StackInstance>>,
-    pub champion_id: Option<String>,
-}
-
-#[function_component(StackDropper)]
-pub fn stack_dropper(props: &StackDropperProps) -> Html {
-    let stack_instances = (*props.stack).clone();
+pub fn stack_dropper(
+    stack: &UseStateHandle<Vec<StackInstance>>,
+    champion_id: Option<String>,
+) -> Html {
+    let stack_instances = (*stack).clone();
     html! {
         <div class="flex flex-col gap-4">
             {
@@ -247,7 +223,7 @@ pub fn stack_dropper(props: &StackDropperProps) -> Html {
             <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
                 {stack_instances.iter().map(|instance| {
                     let onclick = {
-                        let stack = props.stack.clone();
+                        let stack = stack.clone();
                         let instance = instance.clone();
                         Callback::from(move |_| {
                             stack.set({
@@ -266,7 +242,7 @@ pub fn stack_dropper(props: &StackDropperProps) -> Html {
                         >
                             {create_image(
                                 &instance.keyname,
-                                props.champion_id.clone(),
+                                champion_id.clone(),
                                 &instance.source
                             )}
                         </button>

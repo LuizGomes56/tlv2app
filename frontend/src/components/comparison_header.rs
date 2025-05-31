@@ -2,16 +2,7 @@ use yew::prelude::*;
 
 use crate::{IMG_CDN, model::realtime::ComparedItem};
 
-#[derive(PartialEq, Properties)]
-pub struct ComparisonHeaderProps {
-    pub value: ComparedItem,
-    pub item_id: String,
-}
-
-#[function_component]
-pub fn ComparisonHeader(props: &ComparisonHeaderProps) -> Html {
-    let (value, item_id) = (props.value.clone(), props.item_id.clone());
-
+pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
     html! {
         <div class="flex flex-col p-3">
             <div class="flex justify-between items-center gap-4 pb-3 mb-2.5 border-b border-b border-b-zinc-600 w-full">
