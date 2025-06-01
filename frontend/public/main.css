@@ -1,7 +1,15 @@
 body {
-    background-color: #050a23;
+    /* background-color: #050a23; */
     color: #ffffff;
     font-family: Roboto, sans-serif, arial, helvetica, serif;
+}
+
+.bg-custom-800 {
+    background-color: #13161b;
+}
+
+.bg-custom-900 {
+    background-color: #121318;
 }
 
 table span,
@@ -62,16 +70,16 @@ img {
 
 table tbody tr:nth-child(even),
 .table-like section:nth-child(even) {
-    background-color: #1a253b;
+    background-color: #0b0c0f;
 }
 
 table tbody tr:nth-child(odd),
 .table-like section:nth-child(odd) {
-    background-color: #111827;
+    background-color: #12141a;
 }
 
 table thead tr {
-    background-color: hsl(217, 33%, 17%);
+    background-color: #0C0C10;
 }
 
 .img-clipped {

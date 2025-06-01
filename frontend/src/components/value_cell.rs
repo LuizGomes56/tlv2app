@@ -12,7 +12,7 @@ pub fn value_cell(image_source: &str, value: String, oninput: Callback<InputEven
                 />
                 <input
                     oninput={oninput}
-                    class="w-full bg-slate-800 h-8 text-center"
+                    class="w-full bg-custom-800 h-8 text-center"
                     type="number"
                     value={value}
                     min="0"

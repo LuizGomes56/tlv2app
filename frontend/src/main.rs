@@ -3,6 +3,7 @@
 
 mod components;
 mod consts;
+mod context;
 mod hooks;
 mod img;
 mod macros;
@@ -12,8 +13,9 @@ mod tauriapp;
 
 use std::rc::Rc;
 
+use context::core::CoreProvider;
 use pages::{
-    about::about, calculator::CalculatorDisplay, formulas::Formulas, realtime::RealtimeDisplay,
+    about::About, calculator::CalculatorDisplay, formulas::Formulas, realtime::RealtimeDisplay,
 };
 
 use components::sidebar::Sidebar;
@@ -24,12 +26,23 @@ pub const IMG_CDN: &str = "http://localhost:8082/cdn";
 
 #[function_component(App)]
 fn app() -> Html {
+    let selected_page = use_state(|| 2usize);
     html! {
-        <div class="flex">
-            <Sidebar />
-            // { about() }
-            <CalculatorDisplay />
-        </div>
+        <CoreProvider>
+            <div class="grid grid-cols-[auto_1fr]">
+                <Sidebar state_handler={selected_page.clone()} />
+                {
+                    match *selected_page {
+                        // 1 => html! { <RealtimeDisplay /> },
+                        2 => html! { <CalculatorDisplay /> },
+                        3 => html! { <About /> },
+                        4 => html! { <Formulas /> },
+                        // 5 => html! { <Github /> },
+                        _ => html! {},
+                    }
+                }
+            </div>
+        </CoreProvider>
     }
 }
 

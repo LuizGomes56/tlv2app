@@ -2,60 +2,76 @@ use yew::prelude::*;
 
 use crate::{IMG_CDN, img::header::*};
 
-fn make_header_li(img: Html, text: &str, selected: bool) -> Html {
+fn make_header_li(
+    index: usize,
+    state_handler: &UseStateHandle<usize>,
+    img: Html,
+    text: &str,
+) -> Html {
+    let selected = **state_handler == index;
+
     html! {
-        <li class={
-            format!(
-                "relative flex items-center uppercase font-thin text-sm gap-2 h-8 font-semibold {}",
-                if selected { "text-[#d9636c]" } else { "text-slate-400" }
-            )}>
-            {
-                if selected {
-                    html! {
-                        <div class="absolute h-full w-1 rounded-r-xl bg-[#d9636c]" />
-                    }
-                }
-                else {
-                    html! {}
-                }
+        <li
+            class={
+                format!(
+                    "cursor-pointer relative rounded-md w-full flex items-center h-10 font-semibold px-4 gap-2 {}",
+                    if selected { "bg-zinc-900 text-white" } else { "text-[#8E8F93]" }
+                )
             }
-            <div class="px-4 flex items-center gap-2">
-                <div class="text-shadow w-4 h-4 flex-shrink-0 text-inherit">
+            onclick={{
+                let state_handler = state_handler.clone();
+                Callback::from(move |_| state_handler.set(index))
+            }}
+        >
+            <div class="flex items-center gap-2">
+                <div class="text-shadow w-5 h-5 flex-shrink-0 text-inherit">
                     { img }
                 </div>
-                <span class="text-inherit text-shadow">{ text }</span>
+                <span class="text-inherit">{ text }</span>
             </div>
         </li>
     }
 }
 
+#[derive(PartialEq, Properties)]
+pub struct SidebarProps {
+    pub state_handler: UseStateHandle<usize>,
+}
+
 #[function_component(Sidebar)]
-pub fn sidebar() -> Html {
+pub fn sidebar(props: &SidebarProps) -> Html {
     html! {
-        <nav class="h-screen w-48 bg-slate-900">
-            <div class="flex items-center gap-4 p-4 mb-6 mt-2">
+        <nav style="box-shadow: 5px 0px 10px black;" class="h-screen bg-zinc-950 w-48">
+            <div class="flex items-center gap-3 p-4 mb-6 mt-3 justify-center">
                 <img
-                    class="w-6 h-6 flex-shrink-0"
+                    class="w-8 h-8 flex-shrink-0"
                     src={format!("{}/other/league_logo.svg", IMG_CDN)}
                     alt=""
                 />
                 <img
-                    class="h-8"
+                    class="h-10"
                     src={format!("{}/other/league.svg", IMG_CDN)}
                     alt=""
                 />
             </div>
-            <ul class="flex flex-col gap-2">
-                { make_header_li(dashboard_svg(), "Dashboard", false) }
-                { make_header_li(play_svg(), "Realtime", false) }
-                { make_header_li(calculator_svg(), "Calculator", false) }
-            </ul>
-            <hline class="flex m-4 bg-slate-600 h-px rounded-full" />
-            <ul class="flex flex-col gap-2">
-                { make_header_li(about_svg(), "About", false) }
-                { make_header_li(formulas_svg(), "Formulas", true) }
-                { make_header_li(github_svg(), "Github", false) }
-            </ul>
+            <ol class="flex flex-col gap-12">
+                <ul class="flex flex-col gap-2 px-4">
+                    <li class="text-zinc-200 font-semibold px-4 mb-2 w-full">
+                        { "GAMEPLAY" }
+                    </li>
+                    { make_header_li(0, &props.state_handler, dashboard_svg(), "Dashboard") }
+                    { make_header_li(1, &props.state_handler, play_svg(), "Realtime") }
+                    { make_header_li(2, &props.state_handler, calculator_svg(), "Calculator") }
+                </ul>
+                <ul class="flex flex-col gap-2 px-4">
+                    <li class="text-zinc-200 font-semibold px-4 mb-2 w-full">
+                        { "APPLICATION" }
+                    </li>
+                    { make_header_li(3, &props.state_handler, about_svg(), "About") }
+                    { make_header_li(4, &props.state_handler, formulas_svg(), "Formulas") }
+                    { make_header_li(5, &props.state_handler, github_svg(), "Github") }
+                </ul>
+            </ol>
         </nav>
     }
 }

@@ -75,7 +75,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
     html! {
         <div class="flex gap-4 p-4 w-full container mx-auto">
             <div class="flex flex-col gap-4 max-w-md">
-                <div class="flex flex-col shadow-container bg-slate-900">
+                <div class="flex flex-col shadow-container bg-custom-900">
                     <img
                         class="img-clipped h-32"
                         src={format!(
@@ -85,12 +85,12 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         )}
                         alt="Champion"
                     />
-                    <div class="flex justify-between font-bold bg-slate-900 items-center text-slate-300 p-4 gap-8">
+                    <div class="flex justify-between font-bold bg-custom-900 items-center text-slate-300 p-4 gap-8">
                         <span class="text-shadow truncate min-w-0">{format!("{} - {}", current_player.riot_id, current_player.champion_name)}</span>
                         <span class="text-shadow text-nowrap">{format!("{}m {:02}s", game_time_minutes, game_time_seconds)}</span>
                     </div>
                 </div>
-                <div class="flex flex-col shadow-container bg-slate-900">
+                <div class="flex flex-col shadow-container bg-custom-900">
                     <div class="cursor-pointer flex items-center gap-4 p-4 justify-center">
                         <img
                             class="h-4 w-4 aspect-square flex-shrink-0"
@@ -141,7 +141,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                 </div>
             </div>
             <div class="flex flex-col gap-4 flex-1">
-                <div class="shadow-container bg-slate-900">
+                <div class="shadow-container bg-custom-900">
                     {
                         base_table(
                             current_player,
@@ -152,7 +152,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                 {
                     props.game_data.compared_items.iter().map(|(item_id, value)| {
                         html! {
-                            <div class="shadow-container bg-slate-900">
+                            <div class="shadow-container bg-custom-900">
                                 <div class="flex flex-col">
                                     {
                                         comparison_header(
@@ -174,7 +174,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         }
                     }).collect::<Html>()
                 }
-                <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-slate-900">
+                <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-custom-900">
                     <div class="flex flex-col gap-4">
                         {
                             stack_selector(

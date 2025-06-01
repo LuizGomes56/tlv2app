@@ -39,7 +39,7 @@ pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
                             src={format!("{}/stats/{}.png", IMG_CDN, stat_img_path)}
                             alt="Stat"
                         />
-                        <span class="text-sm text-blue-200 text-shadow">
+                        <span class="text-sm text-zinc-300 text-shadow">
                             {format!("{} {}", stat_value.to_string().trim_end_matches(".0"), stat_name)}
                         </span>
                     </div>

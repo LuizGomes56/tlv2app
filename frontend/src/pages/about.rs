@@ -1,5 +1,6 @@
 use yew::prelude::*;
 
+#[function_component(About)]
 pub fn about() -> Html {
     html! {
         <div class="flex flex-col gap-8 p-6 text-white max-h-screen overflow-y-scroll w-full">

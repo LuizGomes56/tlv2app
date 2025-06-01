@@ -17,6 +17,7 @@ use crate::{
         stacker::{StackInstance, stack_dropper, stack_selector, stacker},
         value_cell::value_cell,
     },
+    context::core::CoreContext,
     model::{
         calculator::{ActivePlayerX, Calculator, CurrentPlayerX, EnemyPlayersX, EnemyX, GameX},
         server::ServerResponse,
@@ -60,7 +61,7 @@ fn ability_level_selector(
             </div>
             <input
                 oninput={oninput}
-                class="w-full bg-slate-800 h-8 text-center"
+                class="w-full bg-custom-800 h-8 text-center"
                 type="number"
                 value={value.to_string()}
                 min="0"
@@ -96,7 +97,7 @@ fn stat_selector(
             <input
                 oninput={oninput}
                 value={value}
-                class="text-sm bg-slate-800 w-16 h-6 text-center"
+                class="text-sm bg-custom-800 w-16 h-6 text-center"
                 type="text"
                 aria-label="Ability"
             />
@@ -165,9 +166,12 @@ pub fn CalculatorDisplay() -> Html {
     let enemy_index = use_state(|| 0usize);
     let calculator_state = use_state(|| Option::<Calculator>::None);
     let stack = use_state(|| Vec::<StackInstance>::new());
-    let all_champions = use_state(|| Rc::<HashMap<String, String>>::new(HashMap::new()));
-    let all_items = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
-    let all_runes = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
+
+    let context = use_context::<CoreContext>().expect("CoreContext not found");
+
+    let all_champions = context.get_static_champions();
+    let all_items = context.get_static_items();
+    let all_runes = context.get_static_runes();
 
     let client = Client::new();
 
@@ -179,57 +183,6 @@ pub fn CalculatorDisplay() -> Html {
             error_occurred.set(true);
         })
     };
-
-    {
-        let client = client.clone();
-        let all_champions = all_champions.clone();
-        let all_items = all_items.clone();
-        let all_runes = all_runes.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                let champion_response = client
-                    .get("http://localhost:8082/api/static/champions")
-                    .send()
-                    .await
-                    .unwrap();
-
-                let items_response = client
-                    .get("http://localhost:8082/api/static/items")
-                    .send()
-                    .await
-                    .unwrap();
-
-                let runes_response = client
-                    .get("http://localhost:8082/api/static/runes")
-                    .send()
-                    .await
-                    .unwrap();
-
-                let champion_data = champion_response
-                    .json::<ServerResponse<HashMap<String, String>>>()
-                    .await;
-
-                let items_data = items_response
-                    .json::<ServerResponse<HashMap<usize, String>>>()
-                    .await;
-
-                let runes_data = runes_response
-                    .json::<ServerResponse<HashMap<usize, String>>>()
-                    .await;
-
-                if let Some(ServerResponse { data }) = champion_data.ok() {
-                    all_champions.set(Rc::new(data));
-                }
-                if let Some(ServerResponse { data }) = items_data.ok() {
-                    all_items.set(Rc::new(data));
-                }
-                if let Some(ServerResponse { data }) = runes_data.ok() {
-                    all_runes.set(Rc::new(data));
-                }
-            });
-            || ()
-        });
-    }
 
     {
         let client = client.clone();
@@ -283,7 +236,7 @@ pub fn CalculatorDisplay() -> Html {
     }
 
     html! {
-        <div class="flex flex-wrap gap-4 p-4 justify-center">
+        <div class="h-screen overflow-y-auto flex flex-wrap gap-4 p-4 justify-center">
             <div class="flex flex-col">
                 <div class="flex relative">
                     <img
@@ -297,9 +250,9 @@ pub fn CalculatorDisplay() -> Html {
                         alt="Banner"
                     />
                 </div>
-                <div class="flex flex-col bg-slate-900">
+                <div class="flex flex-col bg-custom-900">
                     <Selector<String>
-                        source_map={all_champions.deref().clone()}
+                        source_map={all_champions}
                         uri={format!("{}/champions", IMG_CDN)}
                         title={"Champion"}
                         selection={SelectionMode::Single({
@@ -313,7 +266,7 @@ pub fn CalculatorDisplay() -> Html {
                         })}
                     />
                     <Selector<usize>
-                        source_map={all_items.deref().clone()}
+                        source_map={all_items}
                         uri={format!("{}/items", IMG_CDN)}
                         title={"Items"}
                         selection={SelectionMode::Multiple({
@@ -327,7 +280,7 @@ pub fn CalculatorDisplay() -> Html {
                         })}
                     />
                     <Selector<usize>
-                        source_map={all_runes.deref().clone()}
+                        source_map={all_runes}
                         uri={format!("{}/runes", IMG_CDN)}
                         title={"Runes"}
                         selection={SelectionMode::Multiple({
@@ -497,7 +450,7 @@ pub fn CalculatorDisplay() -> Html {
                             {
                                 calculator_data.compared_items.iter().map(|(item_id, value)| {
                                     html! {
-                                        <div class="shadow-container bg-slate-900">
+                                        <div class="shadow-container bg-custom-900">
                                             <div class="flex flex-col">
                                                 {
                                                     comparison_header(
@@ -519,7 +472,7 @@ pub fn CalculatorDisplay() -> Html {
                                     }
                                 }).collect::<Html>()
                             }
-                            <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-slate-900">
+                            <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-custom-900">
                                 <div class="flex flex-col gap-4">
                                     {
                                         stack_selector(
@@ -551,7 +504,7 @@ pub fn CalculatorDisplay() -> Html {
                 }
             }
             <div class="flex flex-col">
-                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-slate-400 bg-slate-800">
+                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-slate-400 bg-custom-800">
                     <div
                         onclick={
                             let enemy_index = enemy_index.clone();
@@ -648,9 +601,9 @@ pub fn CalculatorDisplay() -> Html {
                                         alt="Banner"
                                     />
                                 </div>
-                                <div class="flex flex-col bg-slate-900">
+                                <div class="flex flex-col bg-custom-900">
                                     <Selector<String>
-                                        source_map={all_champions.deref().clone()}
+                                        source_map={all_champions}
                                         uri={format!("{}/champions", IMG_CDN)}
                                         title={"Champion"}
                                         selection={SelectionMode::Single({
@@ -667,7 +620,7 @@ pub fn CalculatorDisplay() -> Html {
                                         })}
                                     />
                                     <Selector<usize>
-                                        source_map={all_items.deref().clone()}
+                                        source_map={all_items}
                                         uri={format!("{}/items", IMG_CDN)}
                                         title={"Items"}
                                         selection={SelectionMode::Multiple({
@@ -732,7 +685,7 @@ pub fn CalculatorDisplay() -> Html {
                                                 <input
                                                     oninput={oninput}
                                                     value={value}
-                                                    class="text-sm bg-slate-800 w-16 h-6 text-center"
+                                                    class="text-sm bg-custom-800 w-16 h-6 text-center"
                                                     type="text"
                                                     aria-label="Ability"
                                                 />

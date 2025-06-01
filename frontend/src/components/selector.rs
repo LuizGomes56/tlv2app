@@ -54,7 +54,7 @@ where
         )
     };
 
-    let button_style = "w-full flex items-center gap-2 p-1 even:bg-slate-800 odd:bg-slate-900";
+    let button_style = "w-full flex items-center gap-2 p-1 even:bg-custom-800 odd:bg-custom-900";
     let img_style = "h-5 w-5 aspect-square";
     let text_style = "text-sm";
 
@@ -66,7 +66,7 @@ where
                     move |_| is_open.set(!*is_open)
                 })}
                 ref={button_ref}
-                class="bg-slate-900 h-8 gap-2 w-full flex items-center justify-center"
+                class="bg-custom-900 h-8 gap-2 w-full flex items-center justify-center"
             >
                 <span class="text-shadow">{ props.title.clone() }</span>
             </button>
