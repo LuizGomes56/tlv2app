@@ -53,7 +53,7 @@ fn ability_level_selector(
         <div class="grid grid-cols-[auto_1fr] gap-2">
             <div class="relative flex items-center justify-center">
                 <img
-                    class="h-8 w-8 aspect-square"
+                    class="h-8 min-w-8 aspect-square"
                     src={image_url}
                     alt="Ability"
                 />
@@ -75,22 +75,9 @@ fn ability_level_selector(
 fn stat_selector(
     image_url: String,
     label_enum: StatsValue,
-    state_handler: &UseStateHandle<ActivePlayerX>,
+    oninput: &Callback<InputEvent>,
 ) -> Html {
     let (name, value) = label_enum.get_labels();
-
-    let oninput = {
-        let state_handler = state_handler.clone();
-
-        Callback::from(move |e: InputEvent| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            let mut current_state = (*state_handler).clone();
-            if let Some(input_value) = input.value().parse::<f64>().ok() {
-                apply_stat!(current_state, label_enum, input_value);
-            }
-            state_handler.set(current_state);
-        })
-    };
 
     html! {
         <>
@@ -102,7 +89,7 @@ fn stat_selector(
                 aria-label="Ability"
             />
             <img
-                class="h-4 w-4 aspect-square"
+                class="h-4 min-w-4 aspect-square"
                 src={image_url.clone()}
                 alt="Ability"
             />
@@ -236,11 +223,11 @@ pub fn CalculatorDisplay() -> Html {
     }
 
     html! {
-        <div class="h-screen overflow-y-auto flex flex-wrap gap-4 p-4 justify-center">
-            <div class="flex flex-col">
+        <div class="h-screen overflow-y-auto grid grid-cols-[auto_minmax(384px,1fr)_auto] gap-2 px-2 py-4">
+            <div class="flex flex-col max-h-screen overflow-y-auto px-2">
                 <div class="flex relative">
                     <img
-                        class="h-32 img-clipped"
+                        class="h-28 img-clipped"
                         src={if *error_occurred {
                             format!("{}/splash/{}_0.jpg", IMG_CDN, active_player.champion_id)
                         } else {
@@ -250,7 +237,7 @@ pub fn CalculatorDisplay() -> Html {
                         alt="Banner"
                     />
                 </div>
-                <div class="flex flex-col bg-custom-900">
+                <div class="flex flex-col">
                     <Selector<String>
                         source_map={all_champions}
                         uri={format!("{}/champions", IMG_CDN)}
@@ -294,7 +281,7 @@ pub fn CalculatorDisplay() -> Html {
                         })}
                     />
                 </div>
-                <section class="grid grid-cols-4 gap-2 py-2">
+                <section class="grid grid-cols-2 gap-2 py-2">
                     {
                         ["Q", "W", "E", "R"].into_iter().map(|ability| {
                             let image_url = format!(
@@ -360,11 +347,15 @@ pub fn CalculatorDisplay() -> Html {
                         )
                     }
                 </section>
-                <div class="grid grid-cols-[auto_auto_1fr_auto_auto_1fr] items-center gap-2 pb-8">
+                <div class="grid grid-cols-[auto_auto_1fr] items-center gap-2 pb-8">
                     {[
                         (
                             StatsValue::Level(active_player.level.to_string()),
                             format!("{}/stats/Level.png", IMG_CDN)
+                        ),
+                        (
+                            StatsValue::AttackSpeed(active_player.champion_stats.attack_speed.to_string()),
+                            format!("{}/stats/AttackSpeed.png", IMG_CDN)
                         ),
                         (
                             StatsValue::AbilityPower(active_player.champion_stats.ability_power.to_string()),
@@ -415,10 +406,6 @@ pub fn CalculatorDisplay() -> Html {
                             format!("{}/stats/MagicResist.png", IMG_CDN)
                         ),
                         (
-                            StatsValue::AttackSpeed(active_player.champion_stats.attack_speed.to_string()),
-                            format!("{}/stats/AttackSpeed.png", IMG_CDN)
-                        ),
-                        (
                             StatsValue::MaxMana(active_player.champion_stats.max_mana.to_string()),
                             format!("{}/stats/Mana.png", IMG_CDN)
                         ),
@@ -427,11 +414,24 @@ pub fn CalculatorDisplay() -> Html {
                             format!("{}/stats/Mana.png", IMG_CDN)
                         ),
                     ].into_iter().map(|(label_enum, image_url)| {
+                        let oninput = {
+                            let active_player = active_player.clone();
+                            let label_enum = label_enum.clone();
+                            Callback::from(move |e: InputEvent| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                let mut current_state = (*active_player).clone();
+                                if let Some(input_value) = input.value().parse::<f64>().ok() {
+                                    apply_stat!(current_state, label_enum, input_value);
+                                }
+                                active_player.set(current_state);
+                            })
+                        };
+
                         html! {
                             stat_selector(
                                 image_url,
                                 label_enum,
-                                &active_player
+                                &oninput
                             )
                         }
                     }).collect::<Html>()}
@@ -443,7 +443,7 @@ pub fn CalculatorDisplay() -> Html {
                     let enemies = calculator_data.enemies.clone();
 
                     html! {
-                        <div class="flex flex-col gap-4 flex-1 max-w-full">
+                        <div class="flex flex-col gap-4 flex-1">
                             <div class="overflow-auto">
                                 { base_table(&current_player, &enemies) }
                             </div>
@@ -500,11 +500,15 @@ pub fn CalculatorDisplay() -> Html {
                         </div>
                     }
                 } else {
-                    html! {}
+                    html! {
+                        <div>
+                            { "Loading or an error might have occured" }
+                        </div>
+                    }
                 }
             }
-            <div class="flex flex-col">
-                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-slate-400 bg-custom-800">
+            <div class="flex flex-col px-2">
+                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-lg text-shadow bg-custom-800">
                     <div
                         onclick={
                             let enemy_index = enemy_index.clone();
@@ -596,12 +600,12 @@ pub fn CalculatorDisplay() -> Html {
                             <div class={hidden_class}>
                                 <div class={"flex relative"}>
                                     <img
-                                        class="h-32 img-clipped"
+                                        class="h-28 img-clipped"
                                         src={format!("{}/centered/{}_0.jpg", IMG_CDN, player.champion_id)}
                                         alt="Banner"
                                     />
                                 </div>
-                                <div class="flex flex-col bg-custom-900">
+                                <div class="flex flex-col">
                                     <Selector<String>
                                         source_map={all_champions}
                                         uri={format!("{}/champions", IMG_CDN)}
@@ -657,18 +661,16 @@ pub fn CalculatorDisplay() -> Html {
                                             format!("{}/stats/MagicResist.png", IMG_CDN)
                                         ),
                                     ].into_iter().map(|(label_enum, image_url)| {
-                                        let cloned_enum = label_enum.clone();
-                                        let (name, value) = label_enum.get_labels();
-
                                         let oninput = {
                                             let state_handler = enemy_players.clone();
+                                            let label_enum = label_enum.clone();
 
                                             Callback::from(move |e: InputEvent| {
                                                 let input: HtmlInputElement = e.target_unchecked_into();
                                                 let mut current_state = (*state_handler).clone();
 
                                                 if let Some(input_value) = input.value().parse::<f64>().ok() {
-                                                    match cloned_enum {
+                                                    match label_enum {
                                                         StatsValue::Level(_) => current_state[player_index].level = input_value as usize,
                                                         StatsValue::MaxHealth(_) => current_state[player_index].stats.health = input_value,
                                                         StatsValue::Armor(_) => current_state[player_index].stats.armor = input_value,
@@ -681,21 +683,11 @@ pub fn CalculatorDisplay() -> Html {
                                         };
 
                                         html! {
-                                            <>
-                                                <input
-                                                    oninput={oninput}
-                                                    value={value}
-                                                    class="text-sm bg-custom-800 w-16 h-6 text-center"
-                                                    type="text"
-                                                    aria-label="Ability"
-                                                />
-                                                <img
-                                                    class="h-4 w-4 aspect-square"
-                                                    src={image_url.clone()}
-                                                    alt="Ability"
-                                                />
-                                                <span class="text-sm text-shadow">{name}</span>
-                                            </>
+                                            stat_selector(
+                                                image_url,
+                                                label_enum,
+                                                &oninput
+                                            )
                                         }
                                     }).collect::<Html>()
                                 }

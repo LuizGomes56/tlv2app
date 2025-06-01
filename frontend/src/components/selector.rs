@@ -22,6 +22,22 @@ where
     pub selection: SelectionMode<T>,
 }
 
+fn matches_fuzzy(query: &str, text: &str) -> bool {
+    let mut query_chars = query.chars();
+    let mut current = query_chars.next();
+
+    for c in text.chars() {
+        if let Some(qc) = current {
+            if qc == c {
+                current = query_chars.next();
+            }
+        } else {
+            break;
+        }
+    }
+    current.is_none()
+}
+
 #[function_component(Selector)]
 pub fn selector<T>(props: &SelectorProps<T>) -> Html
 where
@@ -34,17 +50,14 @@ where
         .collect::<Vec<_>>();
 
     match &props.selection {
-        SelectionMode::Single(_) => {
-            tuples.sort_by(|a, b| a.0.cmp(&b.0));
-        }
-        SelectionMode::Multiple(_) => {
-            tuples.sort_by(|a, b| a.1.cmp(&b.1));
-        }
+        SelectionMode::Single(_) => tuples.sort_by(|a, b| a.0.cmp(&b.0)),
+        SelectionMode::Multiple(_) => tuples.sort_by(|a, b| a.1.cmp(&b.1)),
     }
 
     let selected_vec = use_state(|| Vec::<T>::new());
     let dropdown_ref = use_node_ref();
     let is_open = use_state(|| false);
+    let search_query = use_state(|| "".to_string());
 
     let button_ref = {
         let is_open = is_open.clone();
@@ -54,45 +67,61 @@ where
         )
     };
 
-    let button_style = "w-full flex items-center gap-2 p-1 even:bg-custom-800 odd:bg-custom-900";
+    let dropdown_button_style =
+        "w-full flex items-center gap-2 p-1.5 cursor-pointer odd:bg-custom-900 even:bg-zinc-950";
     let img_style = "h-5 w-5 aspect-square";
-    let text_style = "text-sm";
+    let text_style = "text-sm truncate";
+
+    let filtered_tuples = {
+        let query = search_query.to_lowercase();
+        tuples
+            .into_iter()
+            .filter(|(_, label)| matches_fuzzy(&query, &label.to_lowercase()))
+            .collect::<Vec<_>>()
+    };
 
     html! {
         <div class="relative w-full">
-            <button
-                onclick={Callback::from({
-                    let is_open = is_open.clone();
-                    move |_| is_open.set(!*is_open)
-                })}
+            <input
                 ref={button_ref}
-                class="bg-custom-900 h-8 gap-2 w-full flex items-center justify-center"
-            >
-                <span class="text-shadow">{ props.title.clone() }</span>
-            </button>
+                type="text"
+                class="mt-2 bg-custom-900 text-sm h-8 px-3 text-white w-full text-center"
+                placeholder={props.title.clone()}
+                value={(*search_query).clone()}
+                onfocus={{
+                    let is_open = is_open.clone();
+                    Callback::from(move |_| is_open.set(true))
+                }}
+                oninput={{
+                    let search_query = search_query.clone();
+                    Callback::from(move |e: InputEvent| {
+                        let input = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
+                        search_query.set(input);
+                    })
+                }}
+            />
+
             <div
                 ref={dropdown_ref}
                 class={format!(
-                    "absolute top-8 w-full flex-col z-10 max-h-64 overflow-y-auto bg-slate-700 {}",
+                    "absolute top-12 w-full flex-col z-10 max-h-64 overflow-y-auto bg-zinc-900 {}",
                     if *is_open { "flex" } else { "hidden" }
                 )}
             >
                 {
-                    tuples.into_iter().map(|(key, value)| {
+                    filtered_tuples.into_iter().map(|(key, value)| {
                         let key = key.clone();
                         let img_src = format!("{}/{}.png", props.uri, key);
 
                         match &props.selection {
                             SelectionMode::Single(callback) => {
                                 let callback = callback.clone();
-                                // let is_open = is_open.clone();
                                 html! {
                                     <button
                                         onclick={Callback::from(move |_| {
                                             callback.emit(key.clone());
-                                            // is_open.set(false);
                                         })}
-                                        class={button_style}
+                                        class={dropdown_button_style}
                                     >
                                         <img src={img_src.clone()} class={img_style}/>
                                         <span class={text_style}>{ value }</span>
@@ -112,7 +141,7 @@ where
                                                 callback.emit(vec);
                                             }
                                         })}
-                                        class={button_style}
+                                        class={dropdown_button_style}
                                     >
                                         <img src={img_src.clone()} class={img_style}/>
                                         <span class={text_style}>{ value }</span>
