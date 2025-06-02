@@ -1,11 +1,12 @@
-use std::rc::Rc;
+use std::{cell::RefCell, ops::Deref, rc::Rc};
 
+use gloo::timers::callback::Interval;
 use wasm_bindgen::{JsValue, prelude::wasm_bindgen};
 use wasm_bindgen_futures::spawn_local;
 use web_sys::console;
 use yew::prelude::*;
 
-use crate::model::realtime::Realtime;
+use crate::{MAX_FAILURES, model::realtime::Realtime};
 
 #[wasm_bindgen(module = "/public/glue.js")]
 unsafe extern "C" {
@@ -16,27 +17,48 @@ unsafe extern "C" {
     pub async fn invoke_get_realtime_game() -> Result<JsValue, JsValue>;
 }
 
-pub fn get_realtime_game(game_data: UseStateHandle<Option<Rc<Realtime>>>) {
+pub fn get_realtime_game(
+    game_data: UseStateHandle<Option<Rc<Realtime>>>,
+    counter: Rc<RefCell<usize>>,
+) {
+    let counter_clone = Rc::clone(&counter);
+
     spawn_local(async move {
         match invoke_get_realtime_game().await {
             Ok(value) => {
-                console::log_1(&value);
-                let json_string = value.as_string().unwrap_or_default();
-                match serde_json::from_str(&json_string) {
-                    Ok(realtime_data) => {
-                        game_data.set(Some(Rc::new(realtime_data)));
+                if let Some(json_string) = value.as_string() {
+                    if !json_string.is_empty() {
+                        console::log_1(&JsValue::from_str(&format!(
+                            "Resposta recebida: {}",
+                            json_string
+                        )));
+                        match serde_json::from_str(&json_string) {
+                            Ok(realtime_data) => {
+                                console::log_1(&JsValue::from_str("Parsing bem-sucedido"));
+                                game_data.set(Some(Rc::new(realtime_data)));
+                                *counter_clone.borrow_mut() = 0;
+                            }
+                            Err(e) => {
+                                console::log_1(&JsValue::from_str(&format!(
+                                    "Erro de parsing: {}",
+                                    e
+                                )));
+                                *counter_clone.borrow_mut() += 1;
+                            }
+                        }
+                    } else {
+                        console::log_1(&JsValue::from_str("Resposta vazia"));
+                        *counter_clone.borrow_mut() += 1;
                     }
-                    Err(e) => {
-                        console::log_1(&JsValue::from_str(e.to_string().as_str()));
-                    }
+                } else {
+                    console::log_1(&JsValue::from_str("Nenhuma string na resposta"));
+                    *counter_clone.borrow_mut() += 1;
                 }
             }
             Err(e) => {
-                let error_msg = JsValue::from_str(
-                    "É necessário estar instalar o aplicativo nativo para usar o Realtime.",
-                );
-                console::log_1(&error_msg);
+                console::log_1(&JsValue::from_str("Erro na requisição"));
                 console::log_1(&e);
+                *counter_clone.borrow_mut() += 1;
             }
         }
     });

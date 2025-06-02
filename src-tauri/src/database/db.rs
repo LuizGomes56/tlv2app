@@ -110,7 +110,7 @@ pub async fn commit_game_register(
     .map_err(|e| format!("Erro ao inserir game_data: {}", e))?;
 
     let calculated_data = client
-        .post("http://localhost:8082/api/realtime")
+        .post("http://localhost:8082/api/games/realtime")
         .json(&json!({
             "code": game_code,
             "item": "4645"
