@@ -113,7 +113,7 @@ pub async fn commit_game_register(
         .post("http://localhost:8082/api/games/realtime")
         .json(&json!({
             "code": game_code,
-            "item": "4645"
+            "simulated_items": [4645]
         }))
         .send()
         .await
