@@ -29,25 +29,35 @@ fn send_code(state: State<'_, Arc<AppState>>) -> String {
 }
 
 #[tauri::command]
-async fn get_realtime_game(state: State<'_, Arc<AppState>>) -> Result<String, String> {
+async fn get_realtime_game(
+    state: State<'_, Arc<AppState>>,
+    game_code: String,
+) -> Result<String, String> {
     let pool = state.pool.clone();
     let game_id = state
         .game_id
         .lock()
         .map_err(|_| "Falha ao acessar o game_id".to_string())?
         .clone();
-    let game_code = state
-        .game_code
-        .lock()
-        .map_err(|_| "Falha ao acessar o game_code".to_string())?
-        .clone();
+    let code = if game_code.len() == 6 {
+        game_code
+    } else {
+        let locked = state
+            .game_code
+            .lock()
+            .map_err(|_| "Falha ao acessar o game_code".to_string())?;
+        if !locked.is_empty() {
+            locked.clone()
+        } else {
+            return Err("Nenhum game_code disponível".to_string());
+        }
+    };
     let game_started = state
         .game_started
         .lock()
         .map_err(|_| "Falha ao acessar o game_started".to_string())?
         .clone();
-    let commit_result =
-        commit_game_register(&pool, &mut game_started.clone(), game_code, game_id).await;
+    let commit_result = commit_game_register(&pool, &mut game_started.clone(), code, game_id).await;
     let mut game_started_guard = state
         .game_started
         .lock()

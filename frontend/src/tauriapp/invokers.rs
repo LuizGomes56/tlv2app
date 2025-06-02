@@ -10,53 +10,46 @@ use crate::{MAX_FAILURES, model::realtime::Realtime};
 
 #[wasm_bindgen(module = "/public/glue.js")]
 unsafe extern "C" {
-    #[wasm_bindgen(js_name = invoke_send_code, catch)]
+    #[wasm_bindgen(js_name = invokeSendCode, catch)]
     pub async fn invoke_send_code() -> Result<JsValue, JsValue>;
 
-    #[wasm_bindgen(js_name = invoke_get_realtime_game, catch)]
-    pub async fn invoke_get_realtime_game() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(js_name = invokeGetRealtimeGame, catch)]
+    pub async fn invoke_get_realtime_game(game_code: String) -> Result<JsValue, JsValue>;
 }
 
 pub fn get_realtime_game(
+    game_code: String,
     game_data: UseStateHandle<Option<Rc<Realtime>>>,
     counter: Rc<RefCell<usize>>,
 ) {
     let counter_clone = Rc::clone(&counter);
 
     spawn_local(async move {
-        match invoke_get_realtime_game().await {
+        match invoke_get_realtime_game(game_code).await {
             Ok(value) => {
                 if let Some(json_string) = value.as_string() {
                     if !json_string.is_empty() {
-                        console::log_1(&JsValue::from_str(&format!(
-                            "Resposta recebida: {}",
-                            json_string
-                        )));
                         match serde_json::from_str(&json_string) {
                             Ok(realtime_data) => {
-                                console::log_1(&JsValue::from_str("Parsing bem-sucedido"));
                                 game_data.set(Some(Rc::new(realtime_data)));
                                 *counter_clone.borrow_mut() = 0;
                             }
                             Err(e) => {
-                                console::log_1(&JsValue::from_str(&format!(
-                                    "Erro de parsing: {}",
-                                    e
-                                )));
+                                console::log_1(&format!("Erro de parsing: {}", e).into());
                                 *counter_clone.borrow_mut() += 1;
                             }
                         }
                     } else {
-                        console::log_1(&JsValue::from_str("Resposta vazia"));
+                        console::log_1(&"Resposta vazia".into());
                         *counter_clone.borrow_mut() += 1;
                     }
                 } else {
-                    console::log_1(&JsValue::from_str("Nenhuma string na resposta"));
+                    console::log_1(&"Nenhuma string na resposta".into());
                     *counter_clone.borrow_mut() += 1;
                 }
             }
             Err(e) => {
-                console::log_1(&JsValue::from_str("Erro na requisição"));
+                console::log_1(&"Erro na requisição".into());
                 console::log_1(&e);
                 *counter_clone.borrow_mut() += 1;
             }
@@ -70,7 +63,7 @@ pub fn get_code(game_code: UseStateHandle<String>) {
         match code {
             Ok(code_value) => {
                 if code_value.is_undefined() {
-                    console::log_1(&JsValue::from_str("O aplicativo nativo não está em uso"));
+                    console::log_1(&"O aplicativo nativo não está em uso".into());
                 } else {
                     game_code.set(code_value.as_string().unwrap_or_default());
                 }

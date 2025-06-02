@@ -60,76 +60,85 @@ pub async fn commit_game_register(
         .build()
         .map_err(|e| format!("Falha ao criar HTTP client: {}", e))?;
 
-    let resp = client
+    let call_api = async || {
+        println!("Calling API with code {}", game_code);
+
+        let calculated_data = client
+            .post("http://localhost:8082/api/games/realtime")
+            .json(&json!({
+                "code": game_code,
+                "simulated_items": [4645]
+            }))
+            .send()
+            .await
+            .map_err(|e| format!("Erro ao enviar dados: {}", e))?;
+
+        let api_response: ServerResponse = calculated_data
+            .json()
+            .await
+            .map_err(|e| format!("Erro ao parsear resposta do servidor: {}", e))?;
+
+        if !api_response.success {
+            Err(format!(
+                "Erro ao calcular dados: {}",
+                api_response.message.unwrap_or_default()
+            ))
+        } else {
+            Ok(api_response.data.unwrap_or_default().to_string())
+        }
+    };
+
+    match client
         .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
         .send()
         .await
-        .map_err(|e| format!("Erro na requisição: {}", e))?;
+    {
+        Ok(resp) => {
+            let body = resp
+                .text()
+                .await
+                .map_err(|e| format!("Erro ao ler corpo da resposta: {}", e))?;
 
-    let body = resp
-        .text()
-        .await
-        .map_err(|e| format!("Erro ao ler corpo da resposta: {}", e))?;
+            let data: RiotRealtime =
+                serde_json::from_str(&body).map_err(|e| format!("Falha ao parsear JSON: {}", e))?;
 
-    let data: RiotRealtime =
-        serde_json::from_str(&body).map_err(|e| format!("Falha ao parsear JSON: {}", e))?;
+            let game_data = body.clone();
 
-    let game_data = body.clone();
+            let game_time = data.game_data.game_time;
+            let summoner_name = data.active_player.riot_id.clone();
+            let champion_name = data
+                .all_players
+                .into_iter()
+                .find(|p| p.riot_id == summoner_name)
+                .map(|p| p.champion_name)
+                .unwrap_or_default();
 
-    let game_time = data.game_data.game_time;
-    let summoner_name = data.active_player.riot_id.clone();
-    let champion_name = data
-        .all_players
-        .into_iter()
-        .find(|p| p.riot_id == summoner_name)
-        .map(|p| p.champion_name)
-        .unwrap_or_default();
+            if !game_started.clone() {
+                query("UPDATE games SET champion_name = $1, summoner_name = $2 WHERE game_id = $3")
+                    .bind(champion_name.clone())
+                    .bind(summoner_name.clone())
+                    .bind(game_id.clone())
+                    .execute(pool)
+                    .await
+                    .map_err(|e| format!("Erro ao atualizar games: {}", e))?;
+                *game_started = true;
+            }
 
-    if !game_started.clone() {
-        query("UPDATE games SET champion_name = $1, summoner_name = $2 WHERE game_id = $3")
-            .bind(champion_name.clone())
-            .bind(summoner_name.clone())
-            .bind(game_id.clone())
+            query(
+                "INSERT INTO game_data (game_id, game_data, champion_name, game_time, summoner_name)
+                VALUES ($1, $2, $3, $4, $5)",
+            )
+            .bind(game_id)
+            .bind(game_data)
+            .bind(champion_name)
+            .bind(game_time)
+            .bind(summoner_name)
             .execute(pool)
             .await
-            .map_err(|e| format!("Erro ao atualizar games: {}", e))?;
-        *game_started = true;
-    }
+            .map_err(|e| format!("Erro ao inserir game_data: {}", e))?;
 
-    query(
-        "INSERT INTO game_data (game_id, game_data, champion_name, game_time, summoner_name)
-        VALUES ($1, $2, $3, $4, $5)",
-    )
-    .bind(game_id)
-    .bind(game_data)
-    .bind(champion_name)
-    .bind(game_time)
-    .bind(summoner_name)
-    .execute(pool)
-    .await
-    .map_err(|e| format!("Erro ao inserir game_data: {}", e))?;
-
-    let calculated_data = client
-        .post("http://localhost:8082/api/games/realtime")
-        .json(&json!({
-            "code": game_code,
-            "simulated_items": [4645]
-        }))
-        .send()
-        .await
-        .map_err(|e| format!("Erro ao enviar dados: {}", e))?;
-
-    let api_response: ServerResponse = calculated_data
-        .json()
-        .await
-        .map_err(|e| format!("Erro ao parsear resposta do servidor: {}", e))?;
-
-    if !api_response.success {
-        Err(format!(
-            "Erro ao calcular dados: {}",
-            api_response.message.unwrap_or_default()
-        ))
-    } else {
-        Ok(api_response.data.unwrap_or_default().to_string())
+            call_api().await
+        }
+        Err(_) => call_api().await,
     }
 }

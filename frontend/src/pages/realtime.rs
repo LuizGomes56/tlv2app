@@ -14,9 +14,9 @@ use crate::{
     tauriapp::invokers::get_realtime_game,
 };
 use gloo::timers::callback::Interval;
-use std::{ops::Deref, rc::Rc};
-use wasm_bindgen::JsValue;
-use web_sys::console;
+use std::{cell::RefCell, ops::Deref, rc::Rc};
+use wasm_bindgen_futures::spawn_local;
+use web_sys::{HtmlInputElement, console, window};
 use yew::prelude::*;
 
 fn make_scoreboard(score: &Scoreboard) -> Html {
@@ -49,9 +49,38 @@ fn make_scoreboard(score: &Scoreboard) -> Html {
     }
 }
 
+fn fetch_game(
+    interval_state: &UseStateHandle<Option<Interval>>,
+    failure_counter: &Rc<RefCell<usize>>,
+    game_data: &UseStateHandle<Option<Rc<Realtime>>>,
+    game_code: &String,
+) {
+    if interval_state.is_none() && game_code.len() == 6 {
+        let failure_counter = Rc::clone(&failure_counter);
+        let cloned_interval_state = interval_state.clone();
+        let game_data = game_data.clone();
+        let game_code = game_code.clone();
+
+        let interval = Interval::new(1000, move || {
+            get_realtime_game(
+                game_code.clone(),
+                game_data.clone(),
+                failure_counter.clone(),
+            );
+
+            if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
+                web_sys::console::log_1(&"Parando após 10 falhas".into());
+                cloned_interval_state.set(None);
+            }
+        });
+
+        interval_state.set(Some(interval));
+    }
+}
+
 #[derive(PartialEq, Properties)]
 pub struct RealtimeDisplayProps {
-    pub game_code: String,
+    pub game_code_state: UseStateHandle<String>,
 }
 
 #[function_component(RealtimeDisplay)]
@@ -62,30 +91,18 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
     let interval_state = use_state(|| Option::<Interval>::None);
     let failure_counter = use_mut_ref(|| 0usize);
 
+    let game_code = props.game_code_state.deref().clone();
+
     let start_game = {
         let interval_state = interval_state.clone();
         let failure_counter = failure_counter.clone();
         let game_data = game_data.clone();
+        let game_code = game_code.clone();
 
         *failure_counter.borrow_mut() = 0;
 
-        Callback::from(move |_| {
-            if interval_state.is_none() {
-                let failure_counter = Rc::clone(&failure_counter);
-                let cloned_interval_state = interval_state.clone();
-                let game_data = game_data.clone();
-
-                let interval = Interval::new(1000, move || {
-                    get_realtime_game(game_data.clone(), failure_counter.clone());
-
-                    if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
-                        web_sys::console::log_1(&"Parando após 10 falhas".into());
-                        cloned_interval_state.set(None);
-                    }
-                });
-
-                interval_state.set(Some(interval));
-            }
+        Callback::from(move |_: MouseEvent| {
+            fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
         })
     };
 
@@ -93,13 +110,27 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         let interval_state = interval_state.clone();
 
         Callback::from(move |_: MouseEvent| {
+            web_sys::console::log_1(&"Code changed. Cancelling game requests".into());
             interval_state.set(None);
         })
     };
 
-    // <button class="cursor-pointer" onclick={stop_game}>
-    //     { "Stop Game" }
-    // </button>
+    let change_game_code = {
+        let game_code = props.game_code_state.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            game_code.set(input.value());
+        })
+    };
+
+    {
+        let game_data = game_data.clone();
+        let game_code = game_code.clone();
+        use_effect_with(props.game_code_state.clone(), move |_| {
+            interval_state.set(None);
+            fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+        })
+    }
 
     if let Some(game_data) = game_data.deref().clone() {
         let current_player = &game_data.current_player;
@@ -120,7 +151,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         }
 
         html! {
-            <div class="flex gap-4 p-4 w-full container mx-auto">
+            <div class="flex gap-4 p-4 w-full container">
                 <div class="flex flex-col gap-4 max-w-md">
                     <div class="flex flex-col shadow-container bg-custom-900">
                         <img
@@ -138,13 +169,39 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         </div>
                     </div>
                     <div class="flex flex-col shadow-container bg-custom-900">
-                        <div class="cursor-pointer flex items-center gap-4 p-4 justify-center">
-                            <img
-                                class="h-4 w-4 aspect-square flex-shrink-0"
-                                src={format!("{}/other/copy.svg", IMG_CDN)}
-                                alt="Copy"
-                            />
-                            <span class="font-bold text-sm text-shadow">{format!("Game Code - {}", props.game_code)}</span>
+                        <div class="grid grid-cols-2">
+                            <button
+                                class="cursor-pointer flex items-center gap-2 p-4 bg-indigo-950 justify-center"
+                                onclick={{
+                                    let game_code = game_code.clone();
+                                    Callback::from(move |_| {
+                                    let game_code = game_code.clone();
+
+                                    spawn_local(async move {
+                                        if let Some(window) = window() {
+                                            let _ = window.navigator().clipboard().write_text(&game_code);
+                                        }
+                                    });
+                                })}}
+                            >
+                                <img
+                                    class="h-4 w-4 aspect-square flex-shrink-0"
+                                    src={format!("{}/other/copy.svg", IMG_CDN)}
+                                    alt="Copy"
+                                />
+                                <span class="font-bold text-sm text-shadow">{format!("Game Code - {}", game_code)}</span>
+                            </button>
+                            <button
+                                onclick={stop_game}
+                                class="cursor-pointer flex items-center bg-rose-950 gap-2 p-4 justify-center"
+                            >
+                                <img
+                                    class="h-4 w-4 aspect-square flex-shrink-0"
+                                    src={format!("{}/other/stop.svg", IMG_CDN)}
+                                    alt="Stop"
+                                />
+                                <span class="font-bold text-sm text-shadow">{ "Stop Game" }</span>
+                            </button>
                         </div>
                         <div class="grid grid-cols-2">
                             <div class="flex flex-col">
@@ -254,11 +311,11 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
             <div class="flex flex-col gap-12 max-h-screen overflow-y-auto p-12">
                 <div class="flex items-center gap-8">
                     <div class="relative">
-                        <h1 class="font-bold text-4xl bg-gradient-to-r from-indigo-300 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">{ "Realtime Mode" }</h1>
-                        <div class="w-24 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                        <h1 class="font-bold text-4xl bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2">{ "Realtime Mode" }</h1>
+                        <div class="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
                     </div>
                     <button
-                        class="bg-gradient-to-r from-indigo-800 via-purple-800 to-pink-800 text-nowrap place-self-center flex items-center justify-center gap-3 cursor-pointer py-2.5 px-5 text-lg font-semibold transition rounded-lg"
+                        class="bg-gradient-to-r from-blue-800 via-cyan-800 to-emerald-700 text-nowrap place-self-center flex items-center justify-center gap-3 cursor-pointer py-2.5 px-5 text-lg font-semibold transition rounded-lg"
                         onclick={start_game}
                     >
                         <div class="w-4 h-4">{ play_svg() }</div>
@@ -266,104 +323,73 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                     </button>
                 </div>
                 <div class="grid grid-cols-2 gap-10">
-                    <div class="w-full flex flex-col gap-10">
-                        <div class="w-full flex flex-col gap-3 leading-8">
-                            <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
-                                { "How to use it?" }
-                            </h3>
-                            <p class="text-slate-300">
-                                { "In order for this feature to work " }
-                                <span class="font-semibold text-green-300 bg-green-900/30 px-2 py-1 rounded-md border border-green-700/50">{ "you must have left champion selection phase" }</span>
-                                { " and be playing in a valid gamemode such as "}
-                                <span class="font-semibold text-rose-300 bg-rose-900/30 px-2 py-1 rounded-md border border-rose-700/50">{ "Summoner's Rift or ARAM" }</span>
-                            </p>
-                            <p class="text-slate-300 leading-7">
-                                { "It is possible to look at your friend's game data instead. In order to do this,  " }
-                                <span class="font-semibold text-indigo-300 bg-indigo-900/30 px-2 py-1 rounded-md border border-indigo-700/50">{ "they must be running this app during their game" }</span>
-                                { " and follow the same steps as mentioned." }
-                            </p>
-                        </div>
-                        <div class="leading-7">
-                            <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
-                                { "Troubleshooting Tips" }
-                            </h3>
-                            <div class="flex flex-col gap-2 text-slate-300">
-                                <div class="flex gap-3">
-                                    <span class="text-white font-bold">{ "1." }</span>
-                                    <p>
-                                        { "The champion you're playing might be unsupported or recently broken. If you are a developer, you can check the " }
-                                        <span class="font-semibold text-white">{ "Formulas" }</span>
-                                        { " section and inspect the " }
-                                        <code class="font-semibold text-yellow-300 bg-yellow-900/30 px-2 py-1 rounded-md border border-yellow-300/50">{ "json" }</code>{ " and " }
-                                        <code class="font-semibold text-orange-300 bg-orange-900/30 px-2 py-1 rounded-md border border-orange-300/50">{ "rust" }</code>{ " code, or open an issue on " }
-                                        <a
-                                            class="transition-colors w-fit font-semibold text-purple-300 hover:text-violet-400 hover:bg-violet-900/30 hover:border-violet-700/50 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-700/50"
-                                            href="https://github.com/LuizGomes56/tutorlolv2/tree/master/src"
-                                            target="_blank"
-                                        >
-                                            { "Github" }
-                                        </a>
-                                    </p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <span class="text-white font-bold">{ "2." }</span>
-                                    <p>{ "My calculator service may be temporarily down." }</p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <span class="text-white font-bold">{ "3." }</span>
-                                    <p>{ "Riot may have changed their API unexpectedly." }</p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <span class="text-white font-bold">{ "4." }</span>
-                                    <p>{ "Your game code could have been invalidated." }</p>
-                                </div>
+                    <div class="w-full flex flex-col gap-4 leading-8">
+                        <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
+                            { "How to use it?" }
+                        </h3>
+                        <p class="text-slate-300">
+                            { "In order for this feature to work " }
+                            <span class="font-semibold text-green-300 bg-green-900/30 px-2 py-1 rounded-md">{ "you must have left champion selection phase" }</span>
+                            { " and be playing in a valid gamemode such as "}
+                            <span class="font-semibold text-rose-300 bg-rose-900/30 px-2 py-1 rounded-md">{ "Summoner's Rift or ARAM" }</span>
+                        </p>
+                        <p class="text-slate-300">
+                            { "It is possible to look at your friend's game data instead. To achieve this behavior, " }
+                            <span class="font-semibold text-indigo-300 bg-indigo-900/30 px-2 py-1 rounded-md">{ "they must be running this app during their game" }</span>
+                            { " and follow the same steps as mentioned. After, you will have to " }
+                            <span class="font-semibold text-emerald-300 bg-emerald-900/30 px-2 py-1 rounded-md">{ "enter their game code" }</span>
+                            { " in the box below" }
+                        </p>
+                        <div class="relative flex items-center gap-2 w-fit">
+                            <span class="font-semibold text-emerald-300 bg-emerald-900/30 px-2 py-1 rounded-md">{ "Game code value" }</span>
+                            <input
+                                type="text"
+                                placeholder="000000"
+                                value={game_code.clone()}
+                                oninput={change_game_code}
+                                class="w-28 px-4 h-10 rounded-lg text-indigo-300 bg-indigo-900/30 focus:outline-none focus:border-emerald-400 transition-all duration-200 backdrop-blur-sm tracking-wide"
+                            />
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <svg class="w-5 h-5 text-indigo-400/70 group-focus-within:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-4">
+                    <div>
                         <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
-                            { "Source code and formulas" }
+                            { "Troubleshooting Tips" }
                         </h3>
-                        <p class="text-slate-300">
-                            { "Formulas used here are partially available in the " }
-                            <span class="font-semibold text-white">{ "Formulas" }</span>
-                            { " section. You can explore how it all works by visiting my Github repositories listed below. More details about the project can be found in other sections of the application." }
-                        </p>
-                        <div class="grid sm:grid-cols-2 gap-3">
-                            <a class="group bg-zinc-950/60 text-blue-400 hover:text-sky-400 hover:bg-zinc-800/60 border border-zinc-700 hover:border-zinc-600 rounded-lg p-4 transition-all duration-200"
-                            href="https://github.com/LuizGomes56/tutorlolv2" target="_blank">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-5 h-5 flex-shrink-0">
-                                        { github_svg() }
-                                    </div>
-                                    <span class="font-semibold">{ "TutorLoLv2 Server" }</span>
-                                </div>
-                            </a>
-                            <a class="group bg-zinc-950/60 text-blue-400 hover:text-sky-400 hover:bg-zinc-800/60 border border-zinc-700 hover:border-zinc-600 rounded-lg p-4 transition-all duration-200"
-                            href="https://github.com/LuizGomes56/tlv2app" target="_blank">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-5 h-5 flex-shrink-0">
-                                        { github_svg() }
-                                    </div>
-                                    <span class="font-semibold">{ "TutorLoLv2 Windows/WASM" }</span>
-                                </div>
-                            </a>
-                        </div>
-                        <p class="text-slate-300">
-                            { "All the data is retrieved directly from the following link:" }
-                        </p>
-                        <a
-                            class="transition-colors w-fit font-semibold text-blue-300 hover:text-sky-400 hover:bg-sky-900/30 hover:border-sky-700/50 bg-blue-900/30 px-2 py-1 rounded-md border border-blue-700/50"
-                            href="https://127.0.0.1:2999/liveclientdata/allgamedata"
-                            target="_blank"
-                        >
-                            { "https://127.0.0.1:2999/liveclientdata/allgamedata" }
-                        </a>
-                        <div class="flex items-center gap-2 text-[#8E8F93]">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="font-semibold">{ "No unauthorized data sources are used." }</span>
+                        <div class="flex flex-col gap-2 text-slate-300">
+                            <div class="flex gap-3">
+                                <span class="text-white font-bold">{ "1." }</span>
+                                <p>
+                                    { "The champion you're playing might be unsupported or recently broken. If you are a developer, you can check the " }
+                                    <span class="font-semibold text-white">{ "Formulas" }</span>
+                                    { " section and inspect the " }
+                                    <code class="font-semibold text-yellow-300 bg-yellow-900/30 px-2 py-1 rounded-md">{ "json" }</code>{ " and " }
+                                    <code class="font-semibold text-orange-300 bg-orange-900/30 px-2 py-1 rounded-md">{ "rust" }</code>{ " code, or open an issue on " }
+                                    <a
+                                        class="transition-colors w-fit font-semibold text-purple-300 hover:text-violet-400 hover:bg-violet-900/30 hover:border-violet-700/50 bg-purple-900/30 px-2 py-1 rounded-md"
+                                        href="https://github.com/LuizGomes56/tutorlolv2/tree/master/src"
+                                        target="_blank"
+                                    >
+                                        { "Github" }
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-white font-bold">{ "2." }</span>
+                                <p>{ "My calculator service may be temporarily down." }</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-white font-bold">{ "3." }</span>
+                                <p>{ "Riot may have changed their API unexpectedly." }</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-white font-bold">{ "4." }</span>
+                                <p>{ "Your game code could have been invalidated." }</p>
+                            </div>
                         </div>
                     </div>
                 </div>

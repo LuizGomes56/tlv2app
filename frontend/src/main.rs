@@ -15,12 +15,14 @@ use std::{ops::Deref, rc::Rc};
 
 use context::core::CoreProvider;
 use pages::{
-    about::About, calculator::CalculatorDisplay, formulas::Formulas, realtime::RealtimeDisplay,
+    about::about, calculator::CalculatorDisplay, formulas::Formulas, github::github,
+    realtime::RealtimeDisplay,
 };
 
 use components::sidebar::Sidebar;
 use model::{realtime::Realtime, realtime_example::makeup_example};
 use tauriapp::invokers::get_code;
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 pub const IMG_CDN: &str = "http://localhost:8082/cdn";
@@ -44,11 +46,11 @@ fn app() -> Html {
                 <Sidebar state_handler={selected_page.clone()} />
                 {
                     match *selected_page {
-                        1 => html! { <RealtimeDisplay game_code={game_code.deref().clone()} /> },
+                        1 => html! { <RealtimeDisplay game_code_state={game_code} /> },
                         2 => html! { <CalculatorDisplay /> },
-                        3 => html! { <About /> },
+                        3 => html! { about() },
                         4 => html! { <Formulas /> },
-                        // 5 => html! { <Github /> },
+                        5 => html! { github() },
                         _ => html! {},
                     }
                 }
