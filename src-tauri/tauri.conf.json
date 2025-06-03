@@ -1,37 +1,40 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tlnativeapp",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
-  "build": {
-    "frontendDist": "../frontend/dist",
-    "devUrl": "http://localhost:8080",
-    "beforeDevCommand": "cd frontend && trunk serve --release",
-    "beforeBuildCommand": "cd frontend && trunk build --release"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "TutorLoL Native",
-        "width": 1280,
-        "height": 720,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ],
-    "security": {
-      "csp": null
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "tlnativeapp",
+    "version": "0.1.0",
+    "identifier": "tlv2app",
+    "build": {
+        "frontendDist": "../dist",
+        "devUrl": "http://localhost:8080",
+        "beforeDevCommand": "cd frontend && trunk serve --release",
+        "beforeBuildCommand": "cd frontend && trunk build --release"
+    },
+    "app": {
+        "windows": [
+            {
+                "devtools": false,
+                "center": true,
+                "dragDropEnabled": false,
+                "title": "TutorLoL Native",
+                "width": 1280,
+                "height": 720,
+                "resizable": true,
+                "fullscreen": false
+            }
+        ],
+        "security": {
+            "csp": null
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": "all",
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ]
     }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  }
 }
