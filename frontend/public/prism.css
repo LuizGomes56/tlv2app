@@ -54,20 +54,13 @@ pre[class*=language-] {
     hyphens: none
 }
 
-pre[class*=language-] {
+pre {
     padding: 1em;
-    margin: .5em 0;
-    overflow: auto
-}
-
-:not(pre)>code[class*=language-],
-pre[class*=language-] {
-    background: #1F1F1F;
+    overflow: auto;
+    background: #18181b;
 }
 
 :not(pre)>code[class*=language-] {
-    padding: .1em;
-    border-radius: .3em;
     white-space: normal
 }
 
@@ -89,7 +82,6 @@ pre[class*=language-] {
     color: #6196cc
 }
 
-.token.property,
 .token.symbol {
     color: #f8c555
 }

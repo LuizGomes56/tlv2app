@@ -3,12 +3,12 @@
 
 mod components;
 mod context;
+mod externcalls;
 mod hooks;
 mod img;
 mod macros;
 mod model;
 mod pages;
-mod tauriapp;
 
 use std::{ops::Deref, rc::Rc};
 
@@ -19,8 +19,8 @@ use pages::{
 };
 
 use components::sidebar::Sidebar;
+use externcalls::invokers::get_code;
 use model::{realtime::Realtime, realtime_example::makeup_example};
-use tauriapp::invokers::get_code;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 

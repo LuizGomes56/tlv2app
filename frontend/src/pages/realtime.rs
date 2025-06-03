@@ -6,12 +6,12 @@ use crate::{
         comparison_table::comparison_table,
         stacker::{StackInstance, stack_dropper, stack_selector, stacker},
     },
-    img::header::{about_svg, github_svg, play_svg},
+    externcalls::invokers::get_realtime_game,
+    img::icons::{about_svg, github_svg, play_svg},
     model::{
         realtime::{CurrentPlayer, Enemy, Realtime, Scoreboard},
         traits::CurrentPlayerLike,
     },
-    tauriapp::invokers::get_realtime_game,
 };
 use gloo::timers::callback::Interval;
 use std::{cell::RefCell, ops::Deref, rc::Rc};

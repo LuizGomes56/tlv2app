@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{BACKEND_URL, img::header::*};
+use crate::{BACKEND_URL, img::icons::*};
 
 fn make_header_li(
     index: usize,

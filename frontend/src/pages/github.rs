@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::img::header::github_svg;
+use crate::img::icons::github_svg;
 
 pub fn github() -> Html {
     html! {
