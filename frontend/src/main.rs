@@ -2,7 +2,6 @@
 #![allow(unused_imports)]
 
 mod components;
-mod consts;
 mod context;
 mod hooks;
 mod img;
@@ -25,13 +24,13 @@ use tauriapp::invokers::get_code;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
-pub const IMG_CDN: &str = "http://localhost:8082/cdn";
+pub const BACKEND_URL: &str = "http://localhost:8082";
 pub const MAX_FAILURES: usize = 10;
 
 #[function_component(App)]
 fn app() -> Html {
     let game_code = use_state(|| String::from("000000"));
-    let selected_page = use_state(|| 1usize);
+    let selected_page = use_state(|| 4usize);
 
     {
         let game_code = game_code.clone();

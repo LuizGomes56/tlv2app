@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{IMG_CDN, img::header::*};
+use crate::{BACKEND_URL, img::header::*};
 
 fn make_header_li(
     index: usize,
@@ -45,12 +45,12 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             <div class="flex items-center gap-3 p-4 mb-6 mt-3 justify-center">
                 <img
                     class="w-8 h-8 flex-shrink-0"
-                    src={format!("{}/other/league_logo.svg", IMG_CDN)}
+                    src={format!("{}/cdn/other/league_logo.svg", BACKEND_URL)}
                     alt=""
                 />
                 <img
                     class="h-10"
-                    src={format!("{}/other/league.svg", IMG_CDN)}
+                    src={format!("{}/cdn/other/league.svg", BACKEND_URL)}
                     alt=""
                 />
             </div>

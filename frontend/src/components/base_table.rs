@@ -1,5 +1,5 @@
 use crate::{
-    IMG_CDN,
+    BACKEND_URL,
     model::{
         realtime::DamageLike,
         traits::{CurrentPlayerLike, EnemyLike},
@@ -12,7 +12,7 @@ pub fn champion_td(champion_id: &str) -> Html {
     html! {
         <td>
             <img
-                src={format!("{}/champions/{}.png", IMG_CDN, champion_id)}
+                src={format!("{}/cdn/champions/{}.png", BACKEND_URL, champion_id)}
                 alt="Champion"
             />
         </td>
@@ -25,18 +25,18 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
     let is_attack_related = first_char == 'C' || first_char == 'A';
     let img_path = if instance_name == "abilities" {
         if is_attack_related {
-            format!("{}/{}/{}.png", IMG_CDN, instance_name, first_char)
+            format!("{}/cdn/{}/{}.png", BACKEND_URL, instance_name, first_char)
         } else {
             format!(
-                "{}/{}/{}{}.png",
-                IMG_CDN,
+                "{}/cdn/{}/{}{}.png",
+                BACKEND_URL,
                 instance_name,
                 champion_id.unwrap_or_default(),
                 first_char
             )
         }
     } else {
-        format!("{}/{}/{}.png", IMG_CDN, instance_name, keyname)
+        format!("{}/cdn/{}/{}.png", BACKEND_URL, instance_name, keyname)
     };
     let text_content = if instance_name == "abilities" && !is_attack_related {
         if !remaining.is_empty() {

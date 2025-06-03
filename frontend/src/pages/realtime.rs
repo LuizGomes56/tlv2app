@@ -1,5 +1,5 @@
 use crate::{
-    IMG_CDN, MAX_FAILURES,
+    BACKEND_URL, MAX_FAILURES,
     components::{
         base_table::base_table,
         comparison_header::comparison_header,
@@ -25,7 +25,7 @@ fn make_scoreboard(score: &Scoreboard) -> Html {
             <div class="grid grid-cols-[auto_1fr] items-center gap-1.5">
                 <img
                     class="min-w-8 h-8 aspect-square flex-shrink-0"
-                    src={format!("{}/champions/{}.png", IMG_CDN, score.champion_id.clone())}
+                    src={format!("{}/cdn/champions/{}.png", BACKEND_URL, score.champion_id.clone())}
                     alt="Champion"
                 />
                 <div class="flex flex-col leading-none overflow-hidden">
@@ -55,27 +55,25 @@ fn fetch_game(
     game_data: &UseStateHandle<Option<Rc<Realtime>>>,
     game_code: &String,
 ) {
-    if interval_state.is_none() && game_code.len() == 6 {
-        let failure_counter = Rc::clone(&failure_counter);
-        let cloned_interval_state = interval_state.clone();
-        let game_data = game_data.clone();
-        let game_code = game_code.clone();
+    let failure_counter = Rc::clone(&failure_counter);
+    let cloned_interval_state = interval_state.clone();
+    let game_data = game_data.clone();
+    let game_code = game_code.clone();
 
-        let interval = Interval::new(1000, move || {
-            get_realtime_game(
-                game_code.clone(),
-                game_data.clone(),
-                failure_counter.clone(),
-            );
+    let interval = Interval::new(1000, move || {
+        get_realtime_game(
+            game_code.clone(),
+            game_data.clone(),
+            failure_counter.clone(),
+        );
 
-            if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
-                web_sys::console::log_1(&"Parando após 10 falhas".into());
-                cloned_interval_state.set(None);
-            }
-        });
+        if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
+            web_sys::console::log_1(&"Parando após 10 falhas".into());
+            cloned_interval_state.set(None);
+        }
+    });
 
-        interval_state.set(Some(interval));
-    }
+    interval_state.set(Some(interval));
 }
 
 #[derive(PartialEq, Properties)]
@@ -102,7 +100,9 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         *failure_counter.borrow_mut() = 0;
 
         Callback::from(move |_: MouseEvent| {
-            fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            if interval_state.is_none() && game_code.len() == 6 {
+                fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            }
         })
     };
 
@@ -128,7 +128,9 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         let game_code = game_code.clone();
         use_effect_with(props.game_code_state.clone(), move |_| {
             interval_state.set(None);
-            fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            if interval_state.is_none() && game_code.len() == 6 {
+                fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            }
         })
     }
 
@@ -158,7 +160,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                             class="img-clipped h-32"
                             src={format!(
                                 "{}/centered/{}_0.jpg",
-                                IMG_CDN,
+                                BACKEND_URL,
                                 current_player.champion_id
                             )}
                             alt="Champion"
@@ -186,18 +188,18 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                             >
                                 <img
                                     class="h-4 w-4 aspect-square flex-shrink-0"
-                                    src={format!("{}/other/copy.svg", IMG_CDN)}
+                                    src={format!("{}/cdn/other/copy.svg", BACKEND_URL)}
                                     alt="Copy"
                                 />
                                 <span class="font-bold text-sm text-shadow">{format!("Game Code - {}", game_code)}</span>
                             </button>
                             <button
                                 onclick={stop_game}
-                                class="cursor-pointer flex items-center bg-rose-950 gap-2 p-4 justify-center"
+                                class="cursor-pointer flex items-center bg-emerald-950 gap-2 p-4 justify-center"
                             >
                                 <img
                                     class="h-4 w-4 aspect-square flex-shrink-0"
-                                    src={format!("{}/other/stop.svg", IMG_CDN)}
+                                    src={format!("{}/cdn/other/stop.svg", BACKEND_URL)}
                                     alt="Stop"
                                 />
                                 <span class="font-bold text-sm text-shadow">{ "Stop Game" }</span>
@@ -322,8 +324,8 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         <span>{ "Load my current game data" }</span>
                     </button>
                 </div>
-                <div class="grid grid-cols-2 gap-10">
-                    <div class="w-full flex flex-col gap-4 leading-8">
+                <div class="grid grid-cols-2 gap-10 leading-8">
+                    <div class="w-full flex flex-col gap-4">
                         <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
                             { "How to use it?" }
                         </h3>

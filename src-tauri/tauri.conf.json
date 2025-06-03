@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "identifier": "tlv2app",
     "build": {
-        "frontendDist": "../dist",
+        "frontendDist": "../frontend/dist",
         "devUrl": "http://localhost:8080",
         "beforeDevCommand": "cd frontend && trunk serve --release",
         "beforeBuildCommand": "cd frontend && trunk build --release"
@@ -12,9 +12,9 @@
     "app": {
         "windows": [
             {
-                "devtools": false,
+                "devtools": true,
                 "center": true,
-                "dragDropEnabled": false,
+                "dragDropEnabled": true,
                 "title": "TutorLoL Native",
                 "width": 1280,
                 "height": 720,

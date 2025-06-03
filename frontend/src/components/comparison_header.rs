@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{IMG_CDN, model::realtime::ComparedItem};
+use crate::{BACKEND_URL, model::realtime::ComparedItem};
 
 pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
     let mut sorted_stats: Vec<_> = value.prettified_stats.iter().collect();
@@ -12,7 +12,7 @@ pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
                 <div class="flex items-center gap-4">
                     <img
                         class="w-8 h-8 aspect-square flex-shrink-0"
-                        src={format!("{}/items/{}.png", IMG_CDN, item_id)}
+                        src={format!("{}/cdn/items/{}.png", BACKEND_URL, item_id)}
                         alt="Compared Item"
                     />
                     <span class="text-shadow font-bold">
@@ -22,7 +22,7 @@ pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
                 <div class="flex items-center gap-1">
                     <img
                         class="w-4 h-4 aspect-square flex-shrink-0"
-                        src={format!("{}/stats/GoldPer10Seconds.png", IMG_CDN)}
+                        src={format!("{}/cdn/stats/GoldPer10Seconds.png", BACKEND_URL)}
                         alt="Gold Cost"
                     />
                     <span class="text-yellow-300 text-shadow">{value.gold_cost}</span>
@@ -39,7 +39,7 @@ pub fn comparison_header(value: &ComparedItem, item_id: &str) -> Html {
                         <div class="flex items-center gap-2">
                             <img
                                 class="w-4 h-4 aspect-square flex-shrink-0"
-                                src={format!("{}/stats/{}.png", IMG_CDN, stat_img_path)}
+                                src={format!("{}/cdn/stats/{}.png", BACKEND_URL, stat_img_path)}
                                 alt="Stat"
                             />
                             <span class="text-sm text-zinc-300 text-shadow">

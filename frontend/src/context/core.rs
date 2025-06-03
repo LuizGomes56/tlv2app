@@ -1,21 +1,22 @@
 use reqwest::Client;
-use std::collections::HashMap;
 use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap};
 use wasm_bindgen_futures::spawn_local;
 use yew::{html::ChildrenProps, prelude::*};
 
+use crate::BACKEND_URL;
 use crate::{model::server::ServerResponse, pages::formulas::APIFormulas};
 
 #[derive(Clone, PartialEq)]
 pub struct CoreContext {
-    pub static_formulas: UseStateHandle<Rc<HashMap<String, APIFormulas>>>,
+    pub static_formulas: Rc<RefCell<HashMap<String, APIFormulas>>>,
     pub static_champions: UseStateHandle<Rc<HashMap<String, String>>>,
     pub static_items: UseStateHandle<Rc<HashMap<usize, String>>>,
     pub static_runes: UseStateHandle<Rc<HashMap<usize, String>>>,
 }
 
 impl CoreContext {
-    pub fn get_formulas(&self) -> &Rc<HashMap<String, APIFormulas>> {
+    pub fn get_formulas(&self) -> &Rc<RefCell<HashMap<String, APIFormulas>>> {
         &self.static_formulas
     }
 
@@ -34,45 +35,11 @@ impl CoreContext {
 
 #[function_component(CoreProvider)]
 pub fn core_provider(props: &ChildrenProps) -> Html {
-    let formulas_state = use_state(|| Rc::<HashMap<String, APIFormulas>>::new(HashMap::new()));
     let champions_state = use_state(|| Rc::<HashMap<String, String>>::new(HashMap::new()));
     let items_state = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
     let runes_state = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
-
-    {
-        let formulas_state = formulas_state.clone();
-        use_effect_with((), move |_| {
-            if
-            /* NEVER (!) */
-            !formulas_state.is_empty() {
-                spawn_local(async move {
-                    match reqwest::get("http://localhost:8082/api/formulas/champions").await {
-                        Ok(response) => {
-                            match response
-                                .json::<ServerResponse<HashMap<String, APIFormulas>>>()
-                                .await
-                            {
-                                Ok(res) => {
-                                    formulas_state.set(Rc::new(res.data));
-                                }
-                                Err(e) => {
-                                    web_sys::console::error_1(
-                                        &"Erro ao decodificar fórmulas".into(),
-                                    );
-                                    web_sys::console::error_1(&format!("{:?}", e).into());
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            web_sys::console::error_1(&"Erro na requisição de fórmulas".into());
-                            web_sys::console::error_1(&format!("{:?}", e).into());
-                        }
-                    }
-                });
-            }
-            || ()
-        });
-    }
+    let formulas_cell =
+        Rc::<RefCell<HashMap<String, APIFormulas>>>::new(RefCell::new(HashMap::new()));
 
     {
         let all_champions = champions_state.clone();
@@ -85,7 +52,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
 
                 spawn_local(async move {
                     if let Ok(response) = client
-                        .get("http://localhost:8082/api/static/champions")
+                        .get(&format!("{}/api/static/champions", BACKEND_URL))
                         .send()
                         .await
                     {
@@ -102,7 +69,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
                     }
 
                     if let Ok(response) = client
-                        .get("http://localhost:8082/api/static/items")
+                        .get(&format!("{}/api/static/items", BACKEND_URL))
                         .send()
                         .await
                     {
@@ -119,7 +86,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
                     }
 
                     if let Ok(response) = client
-                        .get("http://localhost:8082/api/static/runes")
+                        .get(&format!("{}/api/static/runes", BACKEND_URL))
                         .send()
                         .await
                     {
@@ -142,7 +109,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
 
     html! {
         <ContextProvider<CoreContext> context={CoreContext {
-            static_formulas: formulas_state,
+            static_formulas: formulas_cell,
             static_champions: champions_state,
             static_items: items_state,
             static_runes: runes_state,

@@ -8,7 +8,7 @@ use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::{
-    IMG_CDN, apply_stat,
+    BACKEND_URL, apply_stat,
     components::{
         base_table::base_table,
         comparison_header::comparison_header,
@@ -208,7 +208,7 @@ pub fn CalculatorDisplay() -> Html {
                     });
 
                     let res = client
-                        .post("http://localhost:8082/api/games/calculator")
+                        .post(&format!("{}/api/games/calculator", BACKEND_URL))
                         .json(&json_value)
                         .send()
                         .await
@@ -229,9 +229,9 @@ pub fn CalculatorDisplay() -> Html {
                     <img
                         class="h-28 img-clipped"
                         src={if *error_occurred {
-                            format!("{}/splash/{}_0.jpg", IMG_CDN, active_player.champion_id)
+                            format!("{}/cdn/splash/{}_0.jpg", BACKEND_URL, active_player.champion_id)
                         } else {
-                            format!("{}/centered/{}_0.jpg", IMG_CDN, active_player.champion_id)
+                            format!("{}/cdn/centered/{}_0.jpg", BACKEND_URL, active_player.champion_id)
                         }}
                         onerror={onerror_callback}
                         alt="Banner"
@@ -240,7 +240,7 @@ pub fn CalculatorDisplay() -> Html {
                 <div class="flex flex-col">
                     <Selector<String>
                         source_map={all_champions}
-                        uri={format!("{}/champions", IMG_CDN)}
+                        uri={format!("{}/cdn/champions", BACKEND_URL)}
                         title={"Champion"}
                         selection={SelectionMode::Single({
                             let active_player = active_player.clone();
@@ -254,7 +254,7 @@ pub fn CalculatorDisplay() -> Html {
                     />
                     <Selector<usize>
                         source_map={all_items}
-                        uri={format!("{}/items", IMG_CDN)}
+                        uri={format!("{}/cdn/items", BACKEND_URL)}
                         title={"Items"}
                         selection={SelectionMode::Multiple({
                             let active_player = active_player.clone();
@@ -268,7 +268,7 @@ pub fn CalculatorDisplay() -> Html {
                     />
                     <Selector<usize>
                         source_map={all_runes}
-                        uri={format!("{}/runes", IMG_CDN)}
+                        uri={format!("{}/cdn/runes", BACKEND_URL)}
                         title={"Runes"}
                         selection={SelectionMode::Multiple({
                             let active_player = active_player.clone();
@@ -285,8 +285,8 @@ pub fn CalculatorDisplay() -> Html {
                     {
                         ["Q", "W", "E", "R"].into_iter().map(|ability| {
                             let image_url = format!(
-                                "{}/abilities/{}{}.png",
-                                IMG_CDN,
+                                "{}/cdn/abilities/{}{}.png",
+                                BACKEND_URL,
                                 active_player.champion_id,
                                 ability
                             );
@@ -351,67 +351,67 @@ pub fn CalculatorDisplay() -> Html {
                     {[
                         (
                             StatsValue::Level(active_player.level.to_string()),
-                            format!("{}/stats/Level.png", IMG_CDN)
+                            format!("{}/cdn/stats/Level.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::AttackSpeed(active_player.champion_stats.attack_speed.to_string()),
-                            format!("{}/stats/AttackSpeed.png", IMG_CDN)
+                            format!("{}/cdn/stats/AttackSpeed.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::AbilityPower(active_player.champion_stats.ability_power.to_string()),
-                            format!("{}/stats/AbilityPower.png", IMG_CDN)
+                            format!("{}/cdn/stats/AbilityPower.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::AttackDamage(active_player.champion_stats.attack_damage.to_string()),
-                            format!("{}/stats/AttackDamage.png", IMG_CDN)
+                            format!("{}/cdn/stats/AttackDamage.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::ArmorPenetrationFlat(active_player.champion_stats.armor_penetration_flat.to_string()),
-                            format!("{}/stats/ArmorPenetration.png", IMG_CDN)
+                            format!("{}/cdn/stats/ArmorPenetration.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::ArmorPenetrationPercent(active_player.champion_stats.armor_penetration_percent.to_string()),
-                            format!("{}/stats/ArmorPenetration.png", IMG_CDN)
+                            format!("{}/cdn/stats/ArmorPenetration.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::MagicPenetrationFlat(active_player.champion_stats.magic_penetration_flat.to_string()),
-                            format!("{}/stats/MagicPenetration.png", IMG_CDN)
+                            format!("{}/cdn/stats/MagicPenetration.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::MagicPenetrationPercent(active_player.champion_stats.magic_penetration_percent.to_string()),
-                            format!("{}/stats/MagicPenetration.png", IMG_CDN)
+                            format!("{}/cdn/stats/MagicPenetration.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::CritChance(active_player.champion_stats.crit_chance.to_string()),
-                            format!("{}/stats/CriticalStrikeChance.png", IMG_CDN)
+                            format!("{}/cdn/stats/CriticalStrikeChance.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::CritDamage(active_player.champion_stats.crit_damage.to_string()),
-                            format!("{}/stats/CriticalStrikeDamage.png", IMG_CDN)
+                            format!("{}/cdn/stats/CriticalStrikeDamage.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::MaxHealth(active_player.champion_stats.max_health.to_string()),
-                            format!("{}/stats/Health.png", IMG_CDN)
+                            format!("{}/cdn/stats/Health.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::CurrentHealth(active_player.champion_stats.current_health.to_string()),
-                            format!("{}/stats/Health.png", IMG_CDN)
+                            format!("{}/cdn/stats/Health.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::Armor(active_player.champion_stats.armor.to_string()),
-                            format!("{}/stats/Armor.png", IMG_CDN)
+                            format!("{}/cdn/stats/Armor.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::MagicResist(active_player.champion_stats.magic_resist.to_string()),
-                            format!("{}/stats/MagicResist.png", IMG_CDN)
+                            format!("{}/cdn/stats/MagicResist.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::MaxMana(active_player.champion_stats.max_mana.to_string()),
-                            format!("{}/stats/Mana.png", IMG_CDN)
+                            format!("{}/cdn/stats/Mana.png", BACKEND_URL)
                         ),
                         (
                             StatsValue::CurrentMana(active_player.champion_stats.current_mana.to_string()),
-                            format!("{}/stats/Mana.png", IMG_CDN)
+                            format!("{}/cdn/stats/Mana.png", BACKEND_URL)
                         ),
                     ].into_iter().map(|(label_enum, image_url)| {
                         let oninput = {
@@ -601,14 +601,14 @@ pub fn CalculatorDisplay() -> Html {
                                 <div class={"flex relative"}>
                                     <img
                                         class="h-28 img-clipped"
-                                        src={format!("{}/centered/{}_0.jpg", IMG_CDN, player.champion_id)}
+                                        src={format!("{}/cdn/centered/{}_0.jpg", BACKEND_URL, player.champion_id)}
                                         alt="Banner"
                                     />
                                 </div>
                                 <div class="flex flex-col">
                                     <Selector<String>
                                         source_map={all_champions}
-                                        uri={format!("{}/champions", IMG_CDN)}
+                                        uri={format!("{}/cdn/champions", BACKEND_URL)}
                                         title={"Champion"}
                                         selection={SelectionMode::Single({
                                             let enemy_players = enemy_players.clone();
@@ -625,7 +625,7 @@ pub fn CalculatorDisplay() -> Html {
                                     />
                                     <Selector<usize>
                                         source_map={all_items}
-                                        uri={format!("{}/items", IMG_CDN)}
+                                        uri={format!("{}/cdn/items", BACKEND_URL)}
                                         title={"Items"}
                                         selection={SelectionMode::Multiple({
                                             let enemy_players = enemy_players.clone();
@@ -646,19 +646,19 @@ pub fn CalculatorDisplay() -> Html {
                                     [
                                         (
                                             StatsValue::Level(player.level.to_string()),
-                                            format!("{}/stats/Level.png", IMG_CDN)
+                                            format!("{}/cdn/stats/Level.png", BACKEND_URL)
                                         ),
                                         (
                                             StatsValue::MaxHealth(player.stats.health.to_string()),
-                                            format!("{}/stats/Health.png", IMG_CDN)
+                                            format!("{}/cdn/stats/Health.png", BACKEND_URL)
                                         ),
                                         (
                                             StatsValue::Armor(player.stats.armor.to_string()),
-                                            format!("{}/stats/Armor.png", IMG_CDN)
+                                            format!("{}/cdn/stats/Armor.png", BACKEND_URL)
                                         ),
                                         (
                                             StatsValue::MagicResist(player.stats.magic_resist.to_string()),
-                                            format!("{}/stats/MagicResist.png", IMG_CDN)
+                                            format!("{}/cdn/stats/MagicResist.png", BACKEND_URL)
                                         ),
                                     ].into_iter().map(|(label_enum, image_url)| {
                                         let oninput = {

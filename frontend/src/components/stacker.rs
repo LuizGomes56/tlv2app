@@ -4,7 +4,7 @@ use uuid::Uuid;
 use yew::prelude::*;
 
 use crate::{
-    IMG_CDN,
+    BACKEND_URL,
     components::base_table::create_image,
     model::{realtime::InstanceDamage, traits::EnemyLike},
 };
@@ -42,9 +42,9 @@ pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Ht
                     </th>
                     {
                         make_stacker_header(vec![
-                            format!("{}/other/sigma.svg", IMG_CDN),
-                            format!("{}/other/heart.svg", IMG_CDN),
-                            format!("{}/other/percent.svg", IMG_CDN)
+                            format!("{}/cdn/other/sigma.svg", BACKEND_URL),
+                            format!("{}/cdn/other/heart.svg", BACKEND_URL),
+                            format!("{}/cdn/other/percent.svg", BACKEND_URL)
                         ])
                     }
                 </tr>
@@ -84,7 +84,7 @@ pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Ht
                             <td>
                                 <div class="flex items-center gap-2">
                                     <img
-                                        src={format!("{}/champions/{}.png", IMG_CDN, &enemy_champion_id)}
+                                        src={format!("{}/cdn/champions/{}.png", BACKEND_URL, &enemy_champion_id)}
                                         alt="Champion"
                                     />
                                     <span class="text-sm max-w-24 truncate">
