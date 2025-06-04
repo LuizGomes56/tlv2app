@@ -1,5 +1,5 @@
 use crate::hooks::mouseout_click::use_mouseout_click;
-use std::{collections::HashMap, fmt::Display, hash::Hash, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, hash::Hash, rc::Rc};
 use yew::prelude::*;
 
 #[derive(PartialEq)]
@@ -16,7 +16,7 @@ pub struct SelectorProps<T>
 where
     T: Eq + Hash + Display + Clone + PartialEq + 'static,
 {
-    pub source_map: Rc<HashMap<T, String>>,
+    pub source_map: Rc<RefCell<HashMap<T, String>>>,
     pub title: String,
     pub uri: String,
     pub selection: SelectionMode<T>,
@@ -45,6 +45,7 @@ where
 {
     let source_map = props.source_map.clone();
     let mut tuples = source_map
+        .borrow()
         .iter()
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect::<Vec<_>>();

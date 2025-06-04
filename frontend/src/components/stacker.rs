@@ -9,7 +9,7 @@ use crate::{
     model::{realtime::InstanceDamage, traits::EnemyLike},
 };
 
-pub fn make_stacker_header(urls: Vec<String>) -> Html {
+pub fn make_stacker_header(urls: &[String]) -> Html {
     urls.iter()
         .map(|url| {
             html! {
@@ -41,7 +41,7 @@ pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Ht
                         <span>{ "Name" }</span>
                     </th>
                     {
-                        make_stacker_header(vec![
+                        make_stacker_header(&[
                             format!("{}/cdn/other/sigma.svg", BACKEND_URL),
                             format!("{}/cdn/other/heart.svg", BACKEND_URL),
                             format!("{}/cdn/other/percent.svg", BACKEND_URL)

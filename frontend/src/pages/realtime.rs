@@ -63,7 +63,7 @@ fn fetch_game(
         get_realtime_game(game_code, game_data.clone(), failure_counter.clone());
 
         if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
-            web_sys::console::log_1(&"Parando após 10 falhas".into());
+            web_sys::console::log_1(&"Stopped fetching games due to max failures limit".into());
             cloned_interval_state.set(None);
         }
     });
