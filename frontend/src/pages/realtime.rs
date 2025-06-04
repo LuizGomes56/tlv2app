@@ -25,7 +25,7 @@ fn make_scoreboard(score: &Scoreboard) -> Html {
             <div class="grid grid-cols-[auto_1fr] items-center gap-1.5">
                 <img
                     class="min-w-8 h-8 aspect-square flex-shrink-0"
-                    src={format!("{}/cdn/champions/{}.png", BACKEND_URL, score.champion_id.clone())}
+                    src={format!("{}/cdn/champions/{}.png", BACKEND_URL, score.champion_id.clone().unwrap_or(score.champion_name.clone()))}
                     alt="Champion"
                 />
                 <div class="flex flex-col leading-none overflow-hidden">

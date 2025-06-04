@@ -132,7 +132,7 @@ pub struct Scoreboard {
     pub deaths: usize,
     pub kills: usize,
     pub riot_id: String,
-    pub champion_id: String,
+    pub champion_id: Option<String>,
     pub champion_name: String,
     pub team: String,
     pub position: String,
