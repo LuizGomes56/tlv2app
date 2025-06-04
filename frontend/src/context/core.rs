@@ -12,35 +12,35 @@ use yew::{html::ChildrenProps, prelude::*};
 use crate::BACKEND_URL;
 use crate::{model::server::ServerResponse, pages::formulas::APIFormulas};
 
-type RcRef<K, V> = Rc<RefCell<HashMap<K, V>>>;
+type RcState<T> = UseStateHandle<Rc<T>>;
 
 #[derive(Clone, PartialEq)]
 pub struct CoreContext {
-    pub static_formulas: RcRef<String, APIFormulas>,
-    pub static_champions: RcRef<String, String>,
-    pub static_items: RcRef<usize, String>,
-    pub static_runes: RcRef<usize, String>,
+    pub static_formulas: Rc<RefCell<HashMap<String, APIFormulas>>>,
+    pub static_champions: RcState<HashMap<String, String>>,
+    pub static_items: RcState<HashMap<usize, String>>,
+    pub static_runes: RcState<HashMap<usize, String>>,
 }
 
 impl CoreContext {
-    pub fn get_formulas(&self) -> &RcRef<String, APIFormulas> {
+    pub fn get_formulas(&self) -> &Rc<RefCell<HashMap<String, APIFormulas>>> {
         &self.static_formulas
     }
 
-    pub fn get_static_champions(&self) -> &RcRef<String, String> {
+    pub fn get_static_champions(&self) -> &Rc<HashMap<String, String>> {
         &self.static_champions
     }
 
-    pub fn get_static_items(&self) -> &RcRef<usize, String> {
+    pub fn get_static_items(&self) -> &Rc<HashMap<usize, String>> {
         &self.static_items
     }
 
-    pub fn get_static_runes(&self) -> &RcRef<usize, String> {
+    pub fn get_static_runes(&self) -> &Rc<HashMap<usize, String>> {
         &self.static_runes
     }
 }
 
-async fn get_static_instance<T>(path_name: &str, mut ref_mut: RefMut<'_, T>)
+async fn get_static_instance<T>(path_name: &str, state_handle: RcState<T>)
 where
     T: DeserializeOwned,
 {
@@ -50,7 +50,7 @@ where
     {
         Ok(response) => match response.json::<ServerResponse<T>>().await {
             Ok(ServerResponse { data, .. }) => {
-                *ref_mut = data;
+                state_handle.set(Rc::new(data));
             }
             Err(e) => console::log_1(
                 &format!(
@@ -68,29 +68,22 @@ where
 
 #[function_component(CoreProvider)]
 pub fn core_provider(props: &ChildrenProps) -> Html {
-    let static_champions =
-        Rc::<RefCell<HashMap<String, String>>>::new(RefCell::new(HashMap::new()));
-    let static_items = Rc::<RefCell<HashMap<usize, String>>>::new(RefCell::new(HashMap::new()));
-    let static_runes = Rc::<RefCell<HashMap<usize, String>>>::new(RefCell::new(HashMap::new()));
+    let static_champions = use_state(|| Rc::<HashMap<String, String>>::new(HashMap::new()));
+    let static_items = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
+    let static_runes = use_state(|| Rc::<HashMap<usize, String>>::new(HashMap::new()));
     let formulas_cell =
         Rc::<RefCell<HashMap<String, APIFormulas>>>::new(RefCell::new(HashMap::new()));
 
     {
-        let all_champions = static_champions.clone();
-        let all_items = static_items.clone();
-        let all_runes = static_runes.clone();
+        let static_champions = static_champions.clone();
+        let static_items = static_items.clone();
+        let static_runes = static_runes.clone();
 
         use_effect_with((), move |_| {
             spawn_local(async move {
-                if all_champions.borrow().is_empty() {
-                    get_static_instance("champions", all_champions.borrow_mut()).await;
-                }
-                if all_items.borrow().is_empty() {
-                    get_static_instance("items", all_items.borrow_mut()).await;
-                }
-                if all_runes.borrow().is_empty() {
-                    get_static_instance("runes", all_runes.borrow_mut()).await;
-                }
+                get_static_instance("champions", static_champions).await;
+                get_static_instance("items", static_items).await;
+                get_static_instance("runes", static_runes).await;
             });
             || ()
         });

@@ -164,6 +164,9 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
             }
         }
 
+        let mut compared_items: Vec<_> = game_data.compared_items.iter().collect();
+        compared_items.sort_by_key(|(key, _)| *key);
+
         html! {
             <div class="flex gap-4 p-4 w-full max-h-screen overflow-y-auto">
                 <div class="flex flex-col gap-4 max-w-md">
@@ -267,7 +270,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         }
                     </div>
                     {
-                        game_data.compared_items.iter().map(|(item_id, value)| {
+                        compared_items.into_iter().map(|(item_id, value)| {
                             html! {
                                 <div class="shadow-container bg-custom-900">
                                     <div class="flex flex-col">
@@ -335,7 +338,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                         <span>{ "Load my current game data" }</span>
                     </button>
                 </div>
-                <div class="grid grid-cols-2 gap-10 leading-8">
+                <div class="grid lg:grid-cols-2 gap-10 leading-8">
                     <div class="w-full flex flex-col gap-4">
                         <h3 class="flex text-lg font-semibold items-center gap-3 mb-3 text-white">
                             { "How to use it?" }

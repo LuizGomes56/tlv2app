@@ -59,7 +59,7 @@ pub struct ActivePlayerX {
 impl ActivePlayerX {
     pub fn new() -> ActivePlayerX {
         ActivePlayerX {
-            champion_id: String::from("Neeko"),
+            champion_id: String::from("Gnar"),
             champion_stats: Stats::default(),
             abilities: AbilitiesX {
                 q: 5,
@@ -67,7 +67,7 @@ impl ActivePlayerX {
                 e: 5,
                 r: 3,
             },
-            items: Vec::from([4645, 3115, 3153]),
+            items: Vec::from([3153]),
             runes: Vec::new(),
             level: 18,
             stacks: 0,

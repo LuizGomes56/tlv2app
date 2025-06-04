@@ -62,10 +62,9 @@ fn ability_level_selector(
             <input
                 oninput={oninput}
                 class="w-full bg-custom-800 h-8 text-center"
-                type="number"
+                type="text"
                 value={value.to_string()}
-                min="0"
-                max="6"
+                maxlength="1"
                 aria-label="Ability"
             />
         </div>
@@ -86,6 +85,7 @@ fn stat_selector(
                 value={value}
                 class="text-sm bg-custom-800 w-16 h-6 text-center"
                 type="text"
+                maxlength="6"
                 aria-label="Ability"
             />
             <img
@@ -221,7 +221,7 @@ pub fn CalculatorDisplay() -> Html {
     }
 
     html! {
-        <div class="h-screen overflow-y-auto grid grid-cols-[auto_minmax(384px,1fr)_auto] gap-2 px-2 py-4">
+        <div class="h-screen overflow-y-auto grid grid-cols-[min-content_minmax(384px,1fr)_auto] gap-2 px-2 py-4">
             <div class="flex flex-col max-h-screen overflow-y-auto px-2">
                 <div class="flex relative">
                     <img
@@ -440,13 +440,16 @@ pub fn CalculatorDisplay() -> Html {
                     let current_player = calculator_data.current_player.clone();
                     let enemies = calculator_data.enemies.clone();
 
+                    let mut compared_items: Vec<_> = calculator_data.compared_items.iter().collect();
+                    compared_items.sort_by_key(|(key, _)| *key);
+
                     html! {
                         <div class="flex flex-col gap-4 flex-1">
                             <div class="overflow-auto">
                                 { base_table(&current_player, &enemies) }
                             </div>
                             {
-                                calculator_data.compared_items.iter().map(|(item_id, value)| {
+                                compared_items.into_iter().map(|(item_id, value)| {
                                     html! {
                                         <div class="shadow-container bg-custom-900">
                                             <div class="flex flex-col">

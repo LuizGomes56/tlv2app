@@ -24,6 +24,8 @@ use model::{realtime::Realtime, realtime_example::makeup_example};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
+use crate::pages::dashboard::dashboard;
+
 pub const BACKEND_URL: &str = "http://localhost:8082";
 pub const MAX_FAILURES: usize = 10;
 
@@ -45,12 +47,17 @@ fn app() -> Html {
                 <Sidebar state_handler={selected_page.clone()} />
                 {
                     match *selected_page {
+                        0 => html! { dashboard() },
                         1 => html! { <RealtimeDisplay game_code_state={game_code} /> },
                         2 => html! { <CalculatorDisplay /> },
                         3 => html! { about() },
                         4 => html! { <Formulas /> },
                         5 => html! { github() },
-                        _ => html! {},
+                        _ => html! {
+                            <div class="flex flex-col gap-12 max-h-screen overflow-y-auto p-12">
+                                <h1 class="font-bold text-4xl text-white">{ "Invalid page [404]" }</h1>
+                            </div>
+                        },
                     }
                 }
             </div>
