@@ -88,7 +88,7 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
     let stack = use_state(|| Vec::<StackInstance>::new());
     let interval_state = use_state(|| Option::<Interval>::None);
     let failure_counter = use_mut_ref(|| 0usize);
-
+    let error_occurred = use_state(|| false);
     let game_code = props.game_code_state.deref().clone();
 
     let start_game = {
@@ -134,9 +134,22 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         })
     }
 
+    let onerror_callback = {
+        let error_occurred = error_occurred.clone();
+        Callback::from(move |_| {
+            error_occurred.set(true);
+        })
+    };
+
     if let Some(game_data) = game_data.deref().clone() {
         let current_player = &game_data.current_player;
-        let enemies = &game_data.enemies;
+        let enemies = &game_data
+            .enemies
+            .iter()
+            .enumerate()
+            .filter(|(idx, _)| !hide_champion_state.deref().contains(idx))
+            .map(|(_, enm)| enm.clone())
+            .collect::<Vec<_>>();
         let game_time = game_data.game_information.game_time;
         let game_time_minutes = game_time as i32 / 60;
         let game_time_seconds = game_time as i32 % 60;
@@ -153,16 +166,17 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         }
 
         html! {
-            <div class="flex gap-4 p-4 w-full container">
+            <div class="flex gap-4 p-4 w-full max-h-screen overflow-y-auto">
                 <div class="flex flex-col gap-4 max-w-md">
                     <div class="flex flex-col shadow-container bg-custom-900">
                         <img
                             class="img-clipped h-32"
-                            src={format!(
-                                "{}/centered/{}_0.jpg",
-                                BACKEND_URL,
-                                current_player.champion_id
-                            )}
+                            src={if *error_occurred {
+                                format!("{}/cdn/splash/{}_0.jpg", BACKEND_URL, current_player.champion_id)
+                            } else {
+                                format!("{}/cdn/centered/{}_0.jpg", BACKEND_URL, current_player.champion_id)
+                            }}
+                            onerror={onerror_callback}
                             alt="Champion"
                         />
                         <div class="flex justify-between font-bold bg-custom-900 items-center text-slate-300 p-4 gap-8">

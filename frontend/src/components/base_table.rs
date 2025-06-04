@@ -177,7 +177,7 @@ where
                         let enemy_champion_id = enemy.get_champion_id();
                         html! {
                             <tr>
-                                {champion_td(&enemy_champion_id)}
+                                { champion_td(&enemy_champion_id) }
                                 { make_table_body(&damages.abilities) }
                                 { make_table_body(&damages.items) }
                                 { make_table_body(&damages.runes) }
