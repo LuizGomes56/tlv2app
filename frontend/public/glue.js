@@ -1,7 +1,11 @@
 const invoke = window.__TAURI_INTERNALS__?.invoke;
 
-export async function invokeSendCode() {
-    return await invoke?.("send_code");
+/**
+ * 
+ * @returns {string | undefined}
+ */
+export async function invokeGetGameCode() {
+    return await invoke?.("get_game_code");
 }
 
 /**

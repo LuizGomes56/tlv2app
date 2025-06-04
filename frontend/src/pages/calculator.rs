@@ -1,6 +1,6 @@
 use std::{collections::HashMap, ops::Deref, rc::Rc};
 
-use reqwest::Client;
+use reqwasm::http::Request;
 use serde::Deserialize;
 use serde_json::json;
 use wasm_bindgen_futures::spawn_local;
@@ -160,8 +160,6 @@ pub fn CalculatorDisplay() -> Html {
     let all_items = context.get_static_items();
     let all_runes = context.get_static_runes();
 
-    let client = Client::new();
-
     let error_occurred = use_state(|| false);
 
     let onerror_callback = {
@@ -172,7 +170,6 @@ pub fn CalculatorDisplay() -> Html {
     };
 
     {
-        let client = client.clone();
         let calculator_state = calculator_state.clone();
         let ally_earth_dragons = ally_earth_dragons.clone();
         let ally_fire_dragons = ally_fire_dragons.clone();
@@ -202,14 +199,15 @@ pub fn CalculatorDisplay() -> Html {
                 };
 
                 spawn_local(async move {
-                    let json_value = json!({
-                        "game": game_state,
-                        "simulated_items": simulated_items.deref().clone()
-                    });
-
-                    let res = client
-                        .post(&format!("{}/api/games/calculator", BACKEND_URL))
-                        .json(&json_value)
+                    let res = Request::post(&format!("{}/api/games/calculator", BACKEND_URL))
+                        .header("Content-Type", "application/json")
+                        .body(
+                            json!({
+                                "game": game_state,
+                                "simulated_items": simulated_items.deref().clone()
+                            })
+                            .to_string(),
+                        )
                         .send()
                         .await
                         .unwrap();

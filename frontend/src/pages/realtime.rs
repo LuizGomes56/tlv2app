@@ -53,19 +53,14 @@ fn fetch_game(
     interval_state: &UseStateHandle<Option<Interval>>,
     failure_counter: &Rc<RefCell<usize>>,
     game_data: &UseStateHandle<Option<Rc<Realtime>>>,
-    game_code: &String,
+    game_code: usize,
 ) {
     let failure_counter = Rc::clone(&failure_counter);
     let cloned_interval_state = interval_state.clone();
     let game_data = game_data.clone();
-    let game_code = game_code.clone();
 
     let interval = Interval::new(1000, move || {
-        get_realtime_game(
-            game_code.clone(),
-            game_data.clone(),
-            failure_counter.clone(),
-        );
+        get_realtime_game(game_code, game_data.clone(), failure_counter.clone());
 
         if *failure_counter.borrow() >= (MAX_FAILURES - 1) {
             web_sys::console::log_1(&"Parando após 10 falhas".into());
@@ -78,7 +73,7 @@ fn fetch_game(
 
 #[derive(PartialEq, Properties)]
 pub struct RealtimeDisplayProps {
-    pub game_code_state: UseStateHandle<String>,
+    pub game_code_state: UseStateHandle<usize>,
 }
 
 #[function_component(RealtimeDisplay)]
@@ -95,13 +90,12 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         let interval_state = interval_state.clone();
         let failure_counter = failure_counter.clone();
         let game_data = game_data.clone();
-        let game_code = game_code.clone();
 
         *failure_counter.borrow_mut() = 0;
 
         Callback::from(move |_: MouseEvent| {
-            if interval_state.is_none() && game_code.len() == 6 {
-                fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            if interval_state.is_none() && game_code.to_string().len() == 6 {
+                fetch_game(&interval_state, &failure_counter, &game_data, game_code);
             }
         })
     };
@@ -119,7 +113,12 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         let game_code = props.game_code_state.clone();
         Callback::from(move |e: InputEvent| {
             let input: HtmlInputElement = e.target_unchecked_into();
-            game_code.set(input.value());
+            let value = input.value();
+            if value.len() == 6 {
+                if let Some(num_val) = value.parse::<usize>().ok() {
+                    game_code.set(num_val);
+                }
+            }
         })
     };
 
@@ -128,8 +127,8 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
         let game_code = game_code.clone();
         use_effect_with(props.game_code_state.clone(), move |_| {
             interval_state.set(None);
-            if interval_state.is_none() && game_code.len() == 6 {
-                fetch_game(&interval_state, &failure_counter, &game_data, &game_code);
+            if interval_state.is_none() && game_code.to_string().len() == 6 {
+                fetch_game(&interval_state, &failure_counter, &game_data, game_code);
             }
         })
     }
@@ -189,16 +188,14 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                             <button
                                 class="cursor-pointer flex items-center gap-2 p-4 bg-indigo-950 justify-center"
                                 onclick={{
-                                    let game_code = game_code.clone();
                                     Callback::from(move |_| {
-                                    let game_code = game_code.clone();
-
-                                    spawn_local(async move {
-                                        if let Some(window) = window() {
-                                            let _ = window.navigator().clipboard().write_text(&game_code);
-                                        }
-                                    });
-                                })}}
+                                        spawn_local(async move {
+                                            if let Some(window) = window() {
+                                                let _ = window.navigator().clipboard().write_text(&game_code.to_string());
+                                            }
+                                        });
+                                    })
+                                }}
                             >
                                 <img
                                     class="h-4 w-4 aspect-square flex-shrink-0"
@@ -361,7 +358,8 @@ pub fn realtime_display(props: &RealtimeDisplayProps) -> Html {
                             <input
                                 type="text"
                                 placeholder="000000"
-                                value={game_code.clone()}
+                                maxlength="6"
+                                value={format!("{:06}", game_code).to_string()}
                                 oninput={change_game_code}
                                 class="w-28 px-4 h-10 rounded-lg text-indigo-300 bg-indigo-900/30 focus:outline-none focus:border-emerald-400 transition-all duration-200 backdrop-blur-sm tracking-wide"
                             />

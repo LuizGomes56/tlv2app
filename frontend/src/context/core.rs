@@ -1,4 +1,4 @@
-use reqwest::Client;
+use reqwasm::http::Request;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 use wasm_bindgen_futures::spawn_local;
@@ -48,13 +48,11 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
 
         use_effect_with((), move |_| {
             if all_champions.is_empty() && all_items.is_empty() && all_runes.is_empty() {
-                let client = Client::new();
-
                 spawn_local(async move {
-                    if let Ok(response) = client
-                        .get(&format!("{}/api/static/champions", BACKEND_URL))
-                        .send()
-                        .await
+                    if let Ok(response) =
+                        Request::get(&format!("{}/api/static/champions", BACKEND_URL))
+                            .send()
+                            .await
                     {
                         if let Ok(ServerResponse { data, .. }) = response
                             .json::<ServerResponse<HashMap<String, String>>>()
@@ -68,8 +66,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
                         web_sys::console::error_1(&"Erro ao requisitar campeões".into());
                     }
 
-                    if let Ok(response) = client
-                        .get(&format!("{}/api/static/items", BACKEND_URL))
+                    if let Ok(response) = Request::get(&format!("{}/api/static/items", BACKEND_URL))
                         .send()
                         .await
                     {
@@ -85,8 +82,7 @@ pub fn core_provider(props: &ChildrenProps) -> Html {
                         web_sys::console::error_1(&"Erro ao requisitar itens".into());
                     }
 
-                    if let Ok(response) = client
-                        .get(&format!("{}/api/static/runes", BACKEND_URL))
+                    if let Ok(response) = Request::get(&format!("{}/api/static/runes", BACKEND_URL))
                         .send()
                         .await
                     {

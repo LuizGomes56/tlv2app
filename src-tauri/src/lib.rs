@@ -1,105 +1,148 @@
-use dotenvy::dotenv;
-use rand::Rng;
-use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::{
-    env,
-    sync::{Arc, Mutex},
-};
-use tauri::{Manager, State};
-use uuid::Uuid;
-mod database;
+use std::sync::Arc;
+
+use reqwest::Client;
+use serde::Deserialize;
+use serde_json::{json, Value};
+use tauri::{async_runtime, Manager, State};
+
 mod model;
 
-use database::db::commit_game_register;
+#[derive(Deserialize)]
+struct ServerResponse<T> {
+    success: bool,
+    data: Option<T>,
+    message: Option<String>,
+}
 
-#[derive(Clone)]
 struct AppState {
-    pool: PgPool,
-    game_code: Arc<Mutex<String>>,
-    game_id: Arc<Mutex<String>>,
-    game_started: Arc<Mutex<bool>>,
+    client: Arc<Client>,
+    static_game_code: usize,
+    static_game_id: String,
 }
 
 #[tauri::command]
-fn send_code(state: State<'_, Arc<AppState>>) -> String {
-    match state.game_code.lock() {
-        Ok(guard) => guard.clone(),
-        Err(_) => "Erro ao acessar o código do jogo".to_string(),
+fn get_game_code(state: State<'_, AppState>) -> usize {
+    state.static_game_code
+}
+
+#[tauri::command]
+async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Result<String, String> {
+    let get_game_data = async |url: &str, json_body: Value| -> Result<String, String> {
+        let server_response = state
+            .client
+            .post(url)
+            .json(&json_body)
+            .send()
+            .await
+            .map_err(|e| {
+                let error_kind = format!("Error om server response: {:#?}", e);
+                println!("{}", error_kind);
+                error_kind
+            })?;
+
+        let json_response = server_response
+            .json::<ServerResponse<Value>>()
+            .await
+            .map_err(|e| {
+                let error_kind = format!("Error ocurred on json parsing: {:#?}", e);
+                println!("{}", error_kind);
+                error_kind
+            })?;
+
+        if let Some(data) = json_response.data {
+            return Ok(data.to_string());
+        } else if let Some(message) = json_response.message {
+            return Err(message);
+        } else {
+            return Err("Unknown error".to_string());
+        }
+    };
+
+    if game_code == state.static_game_code {
+        println!("Getting local game data because code matches the stored in the app");
+        let local_response = state
+            .client
+            .get("http://127.0.0.1:2999/liveclientdata/allgamedata")
+            .send()
+            .await
+            .map_err(|e| {
+                let error_kind = format!("Error ocurred in getting live game: {:#?}", e);
+                println!("{}", error_kind);
+                error_kind
+            })?;
+
+        let game_data = local_response.text().await.unwrap_or_default();
+
+        get_game_data(
+            "http://localhost:8082/api/games/realtime",
+            json!({
+                "game_id": state.static_game_id,
+                "game_code": state.static_game_code,
+                "game_data": game_data,
+                "simulated_items": [3115],
+            }),
+        )
+        .await
+    } else {
+        println!(
+            "Getting a previous game using code because it doesn't match the stored in the app"
+        );
+        get_game_data(
+            "http://localhost:8082/api/games/get_by_code",
+            json!({
+                "game_code": game_code,
+                "simulated_items": [3115],
+            }),
+        )
+        .await
     }
 }
 
-#[tauri::command]
-async fn get_realtime_game(
-    state: State<'_, Arc<AppState>>,
-    game_code: String,
-) -> Result<String, String> {
-    let pool = state.pool.clone();
-    let game_id = state
-        .game_id
-        .lock()
-        .map_err(|_| "Falha ao acessar o game_id".to_string())?
-        .clone();
-    let code = if game_code.len() == 6 {
-        game_code
-    } else {
-        let locked = state
-            .game_code
-            .lock()
-            .map_err(|_| "Falha ao acessar o game_code".to_string())?;
-        if !locked.is_empty() {
-            locked.clone()
-        } else {
-            return Err("Nenhum game_code disponível".to_string());
-        }
-    };
-    let game_started = state
-        .game_started
-        .lock()
-        .map_err(|_| "Falha ao acessar o game_started".to_string())?
-        .clone();
-    let commit_result = commit_game_register(&pool, &mut game_started.clone(), code, game_id).await;
-    let mut game_started_guard = state
-        .game_started
-        .lock()
-        .map_err(|_| "Falha ao atualizar o game_started".to_string())?;
-    *game_started_guard = true;
-
-    commit_result
+#[derive(Deserialize)]
+struct CreateGameResponse {
+    game_code: usize,
+    game_id: String,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    dotenv().ok();
-
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![send_code, get_realtime_game,])
+        .invoke_handler(tauri::generate_handler![get_realtime_game, get_game_code])
         .setup(|app| {
-            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL não definido");
+            let client = Client::new();
 
-            let pool = tauri::async_runtime::block_on(async {
-                PgPoolOptions::new()
-                    .max_connections(5)
-                    .connect(&database_url)
+            let initialization: Option<CreateGameResponse> = async_runtime::block_on(async {
+                let ServerResponse::<CreateGameResponse> {
+                    success,
+                    data,
+                    message,
+                } = client
+                    .get("http://localhost:8082/api/games/create")
+                    .send()
                     .await
-                    .expect("Falha ao conectar no banco")
+                    .map_err(|e| println!("Failed request send: {:#?}", e))
+                    .ok()?
+                    .json()
+                    .await
+                    .map_err(|e| println!("Json parse error: {:#?}", e))
+                    .ok()?;
+                if success {
+                    data
+                } else {
+                    println!("Failed to initialize app game creation: {:#?}", message);
+                    None
+                }
             });
 
-            let mut rng = rand::rng();
-            let code = format!("{:06}", rng.random_range(0..1_000_000));
-            let game_id = Uuid::new_v4().to_string();
+            let (static_game_code, static_game_id) = initialization
+                .map(|res| (res.game_code, res.game_id))
+                .unwrap_or_default();
 
-            let state = Arc::new(AppState {
-                pool: pool.clone(),
-                game_code: Arc::new(Mutex::new(code.clone())),
-                game_id: Arc::new(Mutex::new(game_id.clone())),
-                game_started: Arc::new(Mutex::new(false)),
+            app.manage(AppState {
+                client: Arc::new(client),
+                static_game_code,
+                static_game_id,
             });
-
-            tauri::async_runtime::block_on(async {
-                database::db::create_game_register(&state.pool, code, game_id).await;
-            });
-
-            app.manage(state);
 
             if cfg!(debug_assertions) {
                 app.handle().plugin(

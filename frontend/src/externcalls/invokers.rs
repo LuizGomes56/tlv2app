@@ -10,15 +10,15 @@ use crate::{MAX_FAILURES, model::realtime::Realtime};
 
 #[wasm_bindgen(module = "/public/glue.js")]
 unsafe extern "C" {
-    #[wasm_bindgen(js_name = invokeSendCode, catch)]
-    pub async fn invoke_send_code() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(js_name = invokeGetGameCode)]
+    pub async fn invoke_get_game_code() -> JsValue;
 
     #[wasm_bindgen(js_name = invokeGetRealtimeGame, catch)]
-    pub async fn invoke_get_realtime_game(game_code: String) -> Result<JsValue, JsValue>;
+    pub async fn invoke_get_realtime_game(game_code: usize) -> Result<JsValue, JsValue>;
 }
 
 pub fn get_realtime_game(
-    game_code: String,
+    game_code: usize,
     game_data: UseStateHandle<Option<Rc<Realtime>>>,
     counter: Rc<RefCell<usize>>,
 ) {
@@ -57,20 +57,13 @@ pub fn get_realtime_game(
     });
 }
 
-pub fn get_code(game_code: UseStateHandle<String>) {
+pub fn get_code(game_code: UseStateHandle<usize>) {
     spawn_local(async move {
-        let code = invoke_send_code().await;
-        match code {
-            Ok(code_value) => {
-                if code_value.is_undefined() {
-                    console::log_1(&"O aplicativo nativo não está em uso".into());
-                } else {
-                    game_code.set(code_value.as_string().unwrap_or_default());
-                }
-            }
-            Err(e) => {
-                console::log_1(&e);
-            }
+        let code = invoke_get_game_code().await;
+        if code.is_undefined() {
+            console::log_1(&"O aplicativo nativo não está em uso".into());
+        } else {
+            game_code.set(code.as_f64().unwrap_or_default() as usize);
         }
     });
 }

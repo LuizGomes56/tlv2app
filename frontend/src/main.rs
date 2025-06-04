@@ -29,8 +29,8 @@ pub const MAX_FAILURES: usize = 10;
 
 #[function_component(App)]
 fn app() -> Html {
-    let game_code = use_state(|| String::from("000000"));
-    let selected_page = use_state(|| 4usize);
+    let game_code = use_state(|| 0usize);
+    let selected_page = use_state(|| 1usize);
 
     {
         let game_code = game_code.clone();
