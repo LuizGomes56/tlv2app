@@ -41,7 +41,7 @@ pub fn github() -> Html {
                 <div class="overflow-x-auto flex flex-col gap-2 pb-2">
                     <a
                         class="transition-colors w-fit font-semibold text-blue-300 hover:text-sky-400 hover:bg-sky-900/30 bg-blue-900/30 px-2 py-1 rounded-md"
-                        href="https://127.0.0.1:2999/liveclientdata/allgamedata"
+                        href="http://127.0.0.1:2999/liveclientdata/allgamedata"
                         target="_blank"
                     >
                         { "https://127.0.0.1:2999/liveclientdata/allgamedata" }

@@ -25,6 +25,8 @@ fn get_game_code(state: State<'_, AppState>) -> usize {
     state.static_game_code
 }
 
+const BACKEND_URL: &str = "http://localhost:8082";
+
 #[tauri::command]
 async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Result<String, String> {
     let get_game_data = async |url: &str, json_body: Value| -> Result<String, String> {
@@ -74,7 +76,7 @@ async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Resu
         let game_data = local_response.text().await.unwrap_or_default();
 
         get_game_data(
-            "http://localhost:8082/api/games/realtime",
+            &format!("{}/api/games/realtime", BACKEND_URL),
             json!({
                 "game_id": state.static_game_id,
                 "game_code": state.static_game_code,
@@ -88,7 +90,7 @@ async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Resu
             "Getting a previous game using code because it doesn't match the stored in the app"
         );
         get_game_data(
-            "http://localhost:8082/api/games/get_by_code",
+            &format!("{}/api/games/get_by_code", BACKEND_URL),
             json!({
                 "game_code": game_code,
                 "simulated_items": [3115],
@@ -117,7 +119,7 @@ pub fn run() {
                     data,
                     message,
                 } = client
-                    .get("http://localhost:8082/api/games/create")
+                    .get(&format!("{}/api/games/create", BACKEND_URL))
                     .send()
                     .await
                     .map_err(|e| println!("Failed request send: {:#?}", e))
