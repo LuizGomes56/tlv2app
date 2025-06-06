@@ -1,11 +1,17 @@
+#![allow(unstable_features)]
+#![feature(thread_id_value)]
+
 use std::sync::Arc;
 
+use crate::wnd_system::keyboard::{install_hook, uninstall_hook};
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tauri::{async_runtime, Manager, State};
+use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG, WM_QUIT, WM_USER};
 
 mod model;
+mod wnd_system;
 
 #[derive(Deserialize)]
 struct ServerResponse<T> {
@@ -64,7 +70,7 @@ async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Resu
         println!("Getting local game data because code matches the stored in the app");
         let local_response = state
             .client
-            .get("http://127.0.0.1:2999/liveclientdata/allgamedata")
+            .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
             .send()
             .await
             .map_err(|e| {
@@ -109,9 +115,38 @@ struct CreateGameResponse {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .device_event_filter(tauri::DeviceEventFilter::Always)
         .invoke_handler(tauri::generate_handler![get_realtime_game, get_game_code])
         .setup(|app| {
-            let client = Client::new();
+            #[cfg(target_os = "windows")]
+            unsafe {
+                let app_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    install_hook();
+                    let mut msg = MSG::default();
+                    while GetMessageW(&mut msg, None, 0, 0).into() {
+                        if msg.message == WM_QUIT {
+                            break;
+                        }
+                        if msg.message == WM_USER + 1 {
+                            if let Some(win) = app_handle.get_webview_window("main") {
+                                if !win.is_visible().unwrap() {
+                                    let _ = win.show();
+                                    let _ = win.set_focus();
+                                } else {
+                                    let _ = win.hide();
+                                }
+                            }
+                        }
+                    }
+                    uninstall_hook();
+                });
+            }
+            let client = Client::builder()
+                .danger_accept_invalid_certs(true)
+                .timeout(std::time::Duration::from_secs(10))
+                .build()
+                .unwrap();
 
             let initialization: Option<CreateGameResponse> = async_runtime::block_on(async {
                 let ServerResponse::<CreateGameResponse> {
