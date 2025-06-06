@@ -20,10 +20,10 @@
                 "resizable": true,
                 "fullscreen": false,
                 "transparent": true,
-                "decorations": false,
+                "decorations": true,
                 "shadow": false,
                 "alwaysOnTop": true,
-                "visible": false,
+                "visible": true,
                 "focus": false,
                 "skipTaskbar": true
             }

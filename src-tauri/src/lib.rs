@@ -1,13 +1,16 @@
-#![allow(unstable_features)]
-#![feature(thread_id_value)]
-
 use std::sync::Arc;
 
 use crate::wnd_system::keyboard::{install_hook, uninstall_hook};
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use tauri::{async_runtime, Manager, State};
+use tauri::{
+    async_runtime,
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    Manager, State,
+};
+use tauri_plugin_notification::NotificationExt;
 use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG, WM_QUIT, WM_USER};
 
 mod model;
@@ -116,8 +119,61 @@ struct CreateGameResponse {
 pub fn run() {
     tauri::Builder::default()
         .device_event_filter(tauri::DeviceEventFilter::Always)
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![get_realtime_game, get_game_code])
         .setup(|app| {
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let help_i = MenuItem::with_id(app, "help", "Help", true, None::<&str>)?;
+            let show_i = MenuItem::with_id(
+                app,
+                "toggle_visibility",
+                "Toggle Visibility",
+                true,
+                None::<&str>,
+            )?;
+            let menu = Menu::with_items(app, &[&quit_i, &help_i, &show_i])?;
+
+            let tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(true)
+                .build(app)?;
+
+            {
+                let app_handle = app.handle().clone();
+                tray.on_menu_event(move |_, event| match event.id().0.as_str() {
+                    "quit" => {
+                        println!("Item 'Quit' selected");
+                        std::process::exit(0);
+                    }
+                    // #![error] For some reason this feature is not working.
+                    "help" => {
+                        println!("Item 'Help' selected");
+                        app_handle
+                            .notification()
+                            .builder()
+                            .title("Keybindings")
+                            .body("Press Ctrl + ' to toggle window visibility.")
+                            .show()
+                            .unwrap();
+                    }
+                    "toggle_visibility" => {
+                        println!("Item 'Show' selected");
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                    _ => {
+                        println!("Unrecognized menu item: {}", event.id().0);
+                    }
+                });
+            }
+
             #[cfg(target_os = "windows")]
             unsafe {
                 let app_handle = app.handle().clone();
