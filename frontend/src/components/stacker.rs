@@ -82,12 +82,12 @@ pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Ht
                     html! {
                         <tr>
                             <td>
-                                <div class="flex items-center justify-start gap-2">
+                                <div class={"flex items-center justify-start gap-2"}>
                                     <img
                                         src={format!("{}/cdn/champions/{}.png", BACKEND_URL, &enemy_champion_id)}
                                         alt="Champion"
                                     />
-                                    <span class="text-sm max-w-24 truncate">
+                                    <span class={"text-sm max-w-24 truncate"}>
                                         { enemy_champion_name.clone() }
                                     </span>
                                 </div>
@@ -148,7 +148,7 @@ fn make_stack_event(
                         })
                     };
                     html! {
-                        <button {onclick} class="cursor-pointer text-white relative w-8 h-8 flex items-center justify-center">
+                        <button {onclick} class={"cursor-pointer text-white relative w-8 h-8 flex items-center justify-center"}>
                             {create_image(
                                 keyname,
                                 Some(champion_id.to_string()),
@@ -174,11 +174,11 @@ pub fn stack_selector(
     let (abilities, items, runes) = instances;
 
     html! {
-        <div class="flex flex-col gap-4">
-            <h2 class="text-shadow text-xl font-bold">
+        <div class={"flex flex-col gap-4"}>
+            <h2 class={"text-shadow text-xl font-bold"}>
                 { "Selector" }
             </h2>
-            <div class="flex flex-wrap gap-2">
+            <div class={"flex flex-wrap gap-2"}>
                 {make_stack_event(
                     &stack,
                     &champion_id,
@@ -208,11 +208,11 @@ pub fn stack_dropper(
 ) -> Html {
     let stack_instances = (*stack).clone();
     html! {
-        <div class="flex flex-col gap-4">
+        <div class={"flex flex-col gap-4"}>
             {
                 if stack_instances.len() > 0 {
                     html!{
-                        <h2 class="text-shadow text-xl font-bold">
+                        <h2 class={"text-shadow text-xl font-bold"}>
                             { "Stack" }
                         </h2>
                     }
@@ -220,7 +220,7 @@ pub fn stack_dropper(
                     html!{}
                 }
             }
-            <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+            <div class={"flex flex-wrap gap-2 max-h-40 overflow-y-auto"}>
                 {stack_instances.iter().map(|instance| {
                     let onclick = {
                         let stack = stack.clone();
@@ -237,7 +237,7 @@ pub fn stack_dropper(
                     };
                     html! {
                         <button
-                            class="relative w-8 h-8 flex items-center cursor-pointer justify-center"
+                            class={"relative w-8 h-8 flex items-center cursor-pointer justify-center"}
                             {onclick}
                         >
                             {create_image(

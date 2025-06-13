@@ -23,11 +23,11 @@ fn make_header_li(
                 Callback::from(move |_| state_handler.set(index))
             }}
         >
-            <div class="flex items-center gap-2">
-                <div class="text-shadow w-5 h-5 flex-shrink-0 text-inherit">
+            <div class={"flex items-center gap-2"}>
+                <div class={"text-shadow w-5 h-5 flex-shrink-0 text-inherit"}>
                     { img }
                 </div>
-                <span class="text-inherit">{ text }</span>
+                <span class={"text-inherit"}>{ text }</span>
             </div>
         </li>
     }
@@ -41,30 +41,30 @@ pub struct SidebarProps {
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
     html! {
-        <nav style="box-shadow: 5px 0px 10px black;" class="h-screen bg-zinc-950 w-48">
-            <div class="flex items-center gap-3 p-4 mb-6 mt-3 justify-center">
+        <nav style="box-shadow: 5px 0px 10px black;" class={"h-screen bg-zinc-950 w-48"}>
+            <div class={"flex items-center gap-3 p-4 mb-6 mt-3 justify-center"}>
                 <img
-                    class="w-8 h-8 flex-shrink-0"
+                    class={"w-8 h-8 flex-shrink-0"}
                     src={format!("{}/cdn/other/league_logo.svg", BACKEND_URL)}
                     alt=""
                 />
                 <img
-                    class="h-10"
+                    class={"h-10"}
                     src={format!("{}/cdn/other/league.svg", BACKEND_URL)}
                     alt=""
                 />
             </div>
-            <ol class="flex flex-col gap-12">
-                <ul class="flex flex-col gap-2 px-4">
-                    <li class="text-zinc-200 font-semibold px-4 mb-2 w-full">
+            <ol class={"flex flex-col gap-12"}>
+                <ul class={"flex flex-col gap-2 px-4"}>
+                    <li class={"text-zinc-200 font-semibold px-4 mb-2 w-full"}>
                         { "GAMEPLAY" }
                     </li>
                     { make_header_li(0, &props.state_handler, dashboard_svg(), "Dashboard") }
                     { make_header_li(1, &props.state_handler, play_svg(), "Realtime") }
                     { make_header_li(2, &props.state_handler, calculator_svg(), "Calculator") }
                 </ul>
-                <ul class="flex flex-col gap-2 px-4">
-                    <li class="text-zinc-200 font-semibold px-4 mb-2 w-full">
+                <ul class={"flex flex-col gap-2 px-4"}>
+                    <li class={"text-zinc-200 font-semibold px-4 mb-2 w-full"}>
                         { "APPLICATION" }
                     </li>
                     { make_header_li(3, &props.state_handler, about_svg(), "About") }

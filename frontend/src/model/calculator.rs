@@ -54,6 +54,7 @@ pub struct ActivePlayerX {
     pub runes: Vec<usize>,
     pub level: usize,
     pub stacks: usize,
+    pub infer_stats: bool,
 }
 
 impl ActivePlayerX {
@@ -71,6 +72,7 @@ impl ActivePlayerX {
             runes: Vec::new(),
             level: 18,
             stacks: 0,
+            infer_stats: true,
         }
     }
 }
@@ -81,6 +83,7 @@ pub struct EnemyPlayersX {
     pub items: Vec<usize>,
     pub level: usize,
     pub stats: BasicStats,
+    pub infer_stats: bool,
 }
 
 impl EnemyPlayersX {
@@ -97,6 +100,7 @@ impl EnemyPlayersX {
             items: Vec::from([4645, 3115, 3153]),
             level: 14,
             stats: BasicStats::default(),
+            infer_stats: true,
         }
     }
 }
@@ -108,4 +112,5 @@ pub struct GameX {
     pub ally_earth_dragons: usize,
     pub ally_fire_dragons: usize,
     pub enemy_earth_dragons: usize,
+    pub stack_exceptions: HashMap<usize, usize>,
 }

@@ -15,7 +15,7 @@ where
         current_player.get_damaging_instances();
 
     html! {
-        <table class="w-full">
+        <table class={"w-full"}>
             <thead>
                 <tr>
                     <th></th>

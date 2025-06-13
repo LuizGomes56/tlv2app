@@ -60,7 +60,7 @@ pub fn create_image(keyname: &str, champion_id: Option<String>, instance_name: &
                 src={img_path}
                 alt="Instance Icon"
             />
-            <span class="img-letter">{ text_content }</span>
+            <span class={"img-letter"}>{ text_content }</span>
         </>
     }
 }
@@ -121,9 +121,9 @@ pub fn make_table_body(damages: &DamageLike) -> Html {
                         if subtext.is_empty() {
                             { text }
                         } else {
-                            <div class="flex flex-col">
+                            <div class={"flex flex-col"}>
                                 <p>{ text }</p>
-                                <p class="text-zinc-400 text-[11px]">{ subtext }</p>
+                                <p class={"text-zinc-400 text-[11px]"}>{ subtext }</p>
                             </div>
                         }
                     </span>
@@ -143,7 +143,7 @@ where
         current_player.get_damaging_instances();
     let champion_id = current_player.get_champion_id();
     html! {
-        <table class="w-full">
+        <table class={"w-full"}>
             <thead>
                 <tr>
                     <th></th>

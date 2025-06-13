@@ -81,11 +81,11 @@ where
     };
 
     html! {
-        <div class="relative w-full">
+        <div class={"relative w-full"}>
             <input
                 ref={button_ref}
                 type="text"
-                class="mt-2 bg-custom-900 text-sm h-8 px-3 text-white w-full text-center"
+                class={"mt-2 bg-custom-900 text-sm h-8 px-3 text-white w-full text-center"}
                 placeholder={props.title.clone()}
                 value={(*search_query).clone()}
                 onfocus={{

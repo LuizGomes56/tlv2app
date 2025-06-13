@@ -43,7 +43,7 @@ fn app() -> Html {
 
     html! {
         <CoreProvider>
-            <div class="grid grid-cols-[auto_1fr]">
+            <div class={"grid grid-cols-[auto_1fr]"}>
                 <Sidebar state_handler={selected_page.clone()} />
                 {
                     match *selected_page {
@@ -54,8 +54,8 @@ fn app() -> Html {
                         4 => html! { <Formulas /> },
                         5 => html! { github() },
                         _ => html! {
-                            <div class="flex flex-col gap-12 max-h-screen overflow-y-auto p-12">
-                                <h1 class="font-bold text-4xl text-white">{ "Invalid page [404]" }</h1>
+                            <div class={"flex flex-col gap-12 max-h-screen overflow-y-auto p-12"}>
+                                <h1 class={"font-bold text-4xl text-white"}>{ "Invalid page [404]" }</h1>
                             </div>
                         },
                     }

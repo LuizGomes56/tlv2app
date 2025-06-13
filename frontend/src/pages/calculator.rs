@@ -50,18 +50,18 @@ fn ability_level_selector(
     };
 
     html! {
-        <div class="grid grid-cols-[auto_1fr] gap-2">
-            <div class="relative flex items-center justify-center">
+        <div class={"grid grid-cols-[auto_1fr] gap-2"}>
+            <div class={"relative flex items-center justify-center"}>
                 <img
-                    class="h-8 min-w-8 aspect-square"
+                    class={"h-8 min-w-8 aspect-square"}
                     src={image_url}
                     alt="Ability"
                 />
-                <span class="img-letter">{keyname}</span>
+                <span class={"img-letter"}>{keyname}</span>
             </div>
             <input
                 oninput={oninput}
-                class="w-full bg-custom-800 h-8 text-center"
+                class={"w-full bg-custom-800 h-8 text-center"}
                 type="text"
                 value={value.to_string()}
                 maxlength="1"
@@ -83,17 +83,17 @@ fn stat_selector(
             <input
                 oninput={oninput}
                 value={value}
-                class="text-sm bg-custom-800 w-16 h-6 text-center"
+                class={"text-sm bg-custom-800 w-16 h-6 text-center"}
                 type="text"
                 maxlength="6"
                 aria-label="Ability"
             />
             <img
-                class="h-4 min-w-4 aspect-square"
+                class={"h-4 min-w-4 aspect-square"}
                 src={image_url.clone()}
                 alt="Ability"
             />
-            <span class="text-sm text-shadow">{name}</span>
+            <span class={"text-sm text-shadow"}>{name}</span>
         </>
     }
 }
@@ -196,6 +196,7 @@ pub fn CalculatorDisplay() -> Html {
                     ally_earth_dragons: ally_earth_dragons.deref().clone(),
                     ally_fire_dragons: ally_fire_dragons.deref().clone(),
                     enemy_earth_dragons: enemy_earth_dragons.deref().clone(),
+                    stack_exceptions: HashMap::new(),
                 };
 
                 spawn_local(async move {
@@ -221,11 +222,11 @@ pub fn CalculatorDisplay() -> Html {
     }
 
     html! {
-        <div class="h-screen overflow-y-auto grid grid-cols-[min-content_minmax(384px,1fr)_auto] gap-2 px-2 py-4">
-            <div class="flex flex-col max-h-screen overflow-y-auto px-2">
-                <div class="flex relative">
+        <div class={"h-screen overflow-y-auto grid grid-cols-[min-content_minmax(384px,1fr)_auto] gap-2 px-2 py-4"}>
+            <div class={"flex flex-col max-h-screen overflow-y-auto px-2"}>
+                <div class={"flex relative"}>
                     <img
-                        class="h-28 img-clipped"
+                        class={"h-28 img-clipped"}
                         src={if *error_occurred {
                             format!("{}/cdn/splash/{}_0.jpg", BACKEND_URL, active_player.champion_id)
                         } else {
@@ -235,7 +236,7 @@ pub fn CalculatorDisplay() -> Html {
                         alt="Banner"
                     />
                 </div>
-                <div class="flex flex-col">
+                <div class={"flex flex-col"}>
                     <Selector<String>
                         source_map={all_champions}
                         uri={format!("{}/cdn/champions", BACKEND_URL)}
@@ -279,7 +280,7 @@ pub fn CalculatorDisplay() -> Html {
                         })}
                     />
                 </div>
-                <section class="grid grid-cols-2 gap-2 py-2">
+                <section class={"grid grid-cols-2 gap-2 py-2"}>
                     {
                         ["Q", "W", "E", "R"].into_iter().map(|ability| {
                             let image_url = format!(
@@ -345,7 +346,7 @@ pub fn CalculatorDisplay() -> Html {
                         )
                     }
                 </section>
-                <div class="grid grid-cols-[auto_auto_1fr] items-center gap-2 pb-8">
+                <div class={"grid grid-cols-[auto_auto_1fr] items-center gap-2 pb-8"}>
                     {[
                         (
                             StatsValue::Level(active_player.level.to_string()),
@@ -444,22 +445,22 @@ pub fn CalculatorDisplay() -> Html {
                     compared_items.sort_by_key(|(key, _)| *key);
 
                     html! {
-                        <div class="flex flex-col gap-4 flex-1">
-                            <div class="overflow-auto">
+                        <div class={"flex flex-col gap-4 flex-1"}>
+                            <div class={"overflow-auto"}>
                                 { base_table(&current_player, &enemies) }
                             </div>
                             {
                                 compared_items.into_iter().map(|(item_id, value)| {
                                     html! {
-                                        <div class="shadow-container bg-custom-900">
-                                            <div class="flex flex-col">
+                                        <div class={"shadow-container bg-custom-900"}>
+                                            <div class={"flex flex-col"}>
                                                 {
                                                     comparison_header(
                                                         value,
                                                         &item_id.to_string()
                                                     )
                                                 }
-                                                <div class="overflow-auto">
+                                                <div class={"overflow-auto"}>
                                                     {
                                                         comparison_table(
                                                             &current_player,
@@ -473,8 +474,8 @@ pub fn CalculatorDisplay() -> Html {
                                     }
                                 }).collect::<Html>()
                             }
-                            <div class="p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-custom-900">
-                                <div class="flex flex-col gap-4">
+                            <div class={"p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-custom-900"}>
+                                <div class={"flex flex-col gap-4"}>
                                     {
                                         stack_selector(
                                             &stack,
@@ -489,7 +490,7 @@ pub fn CalculatorDisplay() -> Html {
                                         )
                                     }
                                 </div>
-                                <div class="overflow-auto">
+                                <div class={"overflow-auto"}>
                                     {
                                         stacker(
                                             &stack,
@@ -508,8 +509,8 @@ pub fn CalculatorDisplay() -> Html {
                     }
                 }
             }
-            <div class="flex flex-col px-2">
-                <div class="grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-lg text-shadow bg-custom-800">
+            <div class={"flex flex-col px-2"}>
+                <div class={"grid grid-cols-[auto_1fr_1fr_auto] mb-4 gap-2 h-12 text-center text-lg text-shadow bg-custom-800"}>
                     <div
                         onclick={
                             let enemy_index = enemy_index.clone();
@@ -520,7 +521,7 @@ pub fn CalculatorDisplay() -> Html {
                                 }
                             })
                         }
-                        class="flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
+                        class={"flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold"}>
                         { "<" }
                     </div>
                     {
@@ -540,7 +541,7 @@ pub fn CalculatorDisplay() -> Html {
                             html! {
                                 <button
                                     onclick={onclick}
-                                    class="select-none cursor-pointer">
+                                    class={"select-none cursor-pointer"}>
                                     { "+" }
                                 </button>
                             }
@@ -567,7 +568,7 @@ pub fn CalculatorDisplay() -> Html {
                             html! {
                                 <button
                                     onclick={onclick}
-                                    class="select-none cursor-pointer">
+                                    class={"select-none cursor-pointer"}>
                                     { "-" }
                                 </button>
                             }
@@ -589,7 +590,7 @@ pub fn CalculatorDisplay() -> Html {
                                 }
                             })
                         }
-                        class="flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold">
+                        class={"flex items-center justify-center aspect-square select-none cursor-pointer flex-shrink-0 font-bold"}>
                         { ">" }
                     </div>
                 </div>
@@ -601,12 +602,12 @@ pub fn CalculatorDisplay() -> Html {
                             <div class={hidden_class}>
                                 <div class={"flex relative"}>
                                     <img
-                                        class="h-28 img-clipped"
+                                        class={"h-28 img-clipped"}
                                         src={format!("{}/cdn/centered/{}_0.jpg", BACKEND_URL, player.champion_id)}
                                         alt="Banner"
                                     />
                                 </div>
-                                <div class="flex flex-col">
+                                <div class={"flex flex-col"}>
                                     <Selector<String>
                                         source_map={all_champions}
                                         uri={format!("{}/cdn/champions", BACKEND_URL)}
@@ -642,7 +643,7 @@ pub fn CalculatorDisplay() -> Html {
                                         })}
                                     />
                                 </div>
-                                <div class="grid grid-cols-[auto_auto_1fr] items-center gap-2 py-2">
+                                <div class={"grid grid-cols-[auto_auto_1fr] items-center gap-2 py-2"}>
                                 {
                                     [
                                         (
