@@ -449,6 +449,7 @@ pub fn CalculatorDisplay() -> Html {
                             <div class={"overflow-auto"}>
                                 { base_table(&current_player, &enemies) }
                             </div>
+                            /*
                             {
                                 compared_items.into_iter().map(|(item_id, value)| {
                                     html! {
@@ -474,6 +475,7 @@ pub fn CalculatorDisplay() -> Html {
                                     }
                                 }).collect::<Html>()
                             }
+                            */
                             <div class={"p-4 grid grid-cols-[1fr_auto] gap-4 shadow-container bg-custom-900"}>
                                 <div class={"flex flex-col gap-4"}>
                                     {

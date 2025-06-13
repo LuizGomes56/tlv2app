@@ -34,7 +34,6 @@ pub struct Calculator {
     pub enemies: Vec<EnemyX>,
     pub recommended_items: Vec<usize>,
     pub compared_items: HashMap<usize, ComparedItem>,
-    pub best_item: usize,
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize)]

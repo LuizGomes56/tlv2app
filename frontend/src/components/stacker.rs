@@ -81,8 +81,8 @@ pub fn stacker<T: EnemyLike>(stack: &Vec<StackInstance>, enemies: &Vec<T>) -> Ht
 
                     html! {
                         <tr>
-                            <td>
-                                <div class={"flex items-center justify-start gap-2"}>
+                            <td class={"!justify-items-start"}>
+                                <div class={"flex items-center gap-2"}>
                                     <img
                                         src={format!("{}/cdn/champions/{}.png", BACKEND_URL, &enemy_champion_id)}
                                         alt="Champion"

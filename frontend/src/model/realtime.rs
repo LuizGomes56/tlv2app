@@ -146,7 +146,6 @@ pub struct Realtime {
     pub recommended_items: Vec<usize>,
     pub compared_items: HashMap<String, ComparedItem>,
     pub scoreboard: Vec<Scoreboard>,
-    pub best_item: usize,
     pub enemy_dragon_multipliers: DragonMultipliers,
     pub ally_dragon_multipliers: DragonMultipliers,
 }

@@ -20,7 +20,7 @@ use pages::{
 
 use components::sidebar::Sidebar;
 use externcalls::invokers::get_code;
-use model::{realtime::Realtime, realtime_example::makeup_example};
+use model::realtime::Realtime;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
