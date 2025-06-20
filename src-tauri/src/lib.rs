@@ -34,7 +34,8 @@ fn get_game_code(state: State<'_, AppState>) -> usize {
     state.static_game_code
 }
 
-const BACKEND_URL: &str = "http://localhost:8082";
+// const BACKEND_URL: &str = "http://localhost:8082";
+const BACKEND_URL: &str = "https://v2.tutorlol.com";
 
 #[tauri::command]
 async fn get_realtime_game(state: State<'_, AppState>, game_code: usize) -> Result<String, String> {

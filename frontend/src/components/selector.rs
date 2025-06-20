@@ -123,7 +123,7 @@ where
                                         })}
                                         class={dropdown_button_style}
                                     >
-                                        <img src={img_src.clone()} class={img_style}/>
+                                        <img src={img_src.clone()} alt="__void" class={img_style}/>
                                         <span class={text_style}>{ value }</span>
                                     </button>
                                 }
@@ -143,7 +143,7 @@ where
                                         })}
                                         class={dropdown_button_style}
                                     >
-                                        <img src={img_src.clone()} class={img_style}/>
+                                        <img src={img_src.clone()} alt="__void" class={img_style}/>
                                         <span class={text_style}>{ value }</span>
                                     </button>
                                 }

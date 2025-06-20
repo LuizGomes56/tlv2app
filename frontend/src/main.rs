@@ -26,7 +26,8 @@ use yew::prelude::*;
 
 use crate::pages::dashboard::dashboard;
 
-pub const BACKEND_URL: &str = "http://localhost:8082";
+// pub const BACKEND_URL: &str = "http://localhost:8082";
+pub const BACKEND_URL: &str = "https://v2.tutorlol.com";
 pub const MAX_FAILURES: usize = 10;
 
 #[function_component(App)]
